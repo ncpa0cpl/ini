@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wlevene/ini/ast"
-	"github.com/wlevene/ini/lexer"
-	"github.com/wlevene/ini/parser"
-	"github.com/wlevene/ini/token"
+	"github.com/ncpa0cpl/ini/ast"
+	"github.com/ncpa0cpl/ini/lexer"
+	"github.com/ncpa0cpl/ini/parser"
+	"github.com/ncpa0cpl/ini/token"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -377,15 +377,9 @@ func (this *Ini) DelSection(section string) *Ini {
 	return this
 }
 
-// TODO: implement Save
-func (this *Ini) Save(filename string) *Ini {
-
-	if filename == "" {
-		return this
-	}
-
+func (this *Ini) ToString() string {
 	if this.doc == nil {
-		return this
+		return ""
 	}
 
 	var result string
@@ -427,15 +421,25 @@ func (this *Ini) Save(filename string) *Ini {
 		}
 	}
 
-	this.err = os.Remove(filename)
-	if this.err != nil {
-		return this
+	return result
+}
+
+func (this *Ini) Save(filename string) (*Ini, error) {
+	if filename == "" {
+		return this, fmt.Errorf("invalid filepath")
 	}
 
-	var data = []byte(result)
-	this.err = ioutil.WriteFile(filename, data, 0666)
+	result := this.ToString()
 
-	return this
+	file, err := os.Create(filename)
+	if err != nil {
+		return this, err
+	}
+
+	_, err = file.WriteString(result)
+	file.Close()
+
+	return this, err
 }
 
 // ----------------------------------------------------------------

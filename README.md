@@ -9,9 +9,9 @@
 The INI Parser & Reader Writer Library is a fast and easy-to-use library for parsing and manipulating INI files in the Go programming language. It provides functionality to read INI files from both byte slices and files, supports real-time file monitoring, and offers options to unmarshal INI data into Go structs, marshal data to JSON, and write data back to files.
 
 
-[![Build Status](https://travis-ci.org/meolu/walden.svg?branch=master)](https://github.com/wlevene/ini)
+[![Build Status](https://travis-ci.org/meolu/walden.svg?branch=master)](https://github.com/ncpa0cpl/ini)
 ![version](https://img.shields.io/badge/version-0.1.5-blue)
-[![Go Report Card](https://goreportcard.com/badge/github.com/wlevene/ini)](https://goreportcard.com/report/github.com/wlevene/ini)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ncpa0cpl/ini)](https://goreportcard.com/report/github.com/ncpa0cpl/ini)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)
 
 ## Features
@@ -26,7 +26,7 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 ## Installation
 
 ```shell
-go get github.com/wlevene/ini
+go get github.com/ncpa0cpl/ini
 ```
 
 
@@ -35,7 +35,7 @@ go get github.com/wlevene/ini
 ```go
 import (
     "fmt"
-    "github.com/wlevene/ini"
+    "github.com/ncpa0cpl/ini"
 )
 ```
 

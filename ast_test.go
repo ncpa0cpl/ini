@@ -1,10 +1,9 @@
-package ini
+package ini_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/wlevene/ini/scanner"
+	"github.com/ncpa0cpl/ini/scanner"
 )
 
 func TestIniParse(t *testing.T) {
@@ -82,14 +81,6 @@ k=v
 	s.Scan()
 }
 
-func TestIniParse6(t *testing.T) {
-	str := "123"
-	s := &str
-	s = nil
-
-	fmt.Println(str, s)
-}
-
 func TestIniParseV2(t *testing.T) {
 	doc := `
 [section]
@@ -122,5 +113,4 @@ k2 = 3213
 	s := scanner.New([]byte(doc))
 
 	s.Scan()
-
 }

@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"github.com/wlevene/ini/ast"
-	"github.com/wlevene/ini/lexer"
-	"github.com/wlevene/ini/token"
+	"github.com/ncpa0cpl/ini/ast"
+	"github.com/ncpa0cpl/ini/lexer"
+	"github.com/ncpa0cpl/ini/token"
 )
 
 // type (

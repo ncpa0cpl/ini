@@ -1,42 +1,21 @@
-package ini
+package ini_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"testing"
-	"time"
+
+	"github.com/ncpa0cpl/ini"
+	"github.com/stretchr/testify/assert"
 )
-
-func TestIni(t *testing.T) {
-	doc := `
-; 123
-c=d
-# 434
-
-[section]
-k=v
-; dsfads 
-;123
-#3452345
-
-
-[section1]
-k1=v1
-`
-	ini := New().Load([]byte(doc))
-	ini.Dump()
-}
 
 func TestIni0(t *testing.T) {
 	doc := `
 [section]
 k =v
 `
-	i_doc := New().Load([]byte(doc)).Section("section")
-	i_doc.Dump()
+	i_doc := ini.New().Load([]byte(doc)).Section("section")
 
 	v := i_doc.Get("k")
-	fmt.Println("v: ", v)
 	if v != "v" {
 		t.Errorf("error %s", v)
 	}
@@ -48,7 +27,7 @@ func TestIni2(t *testing.T) {
 k=v
 k1 = 1
 `
-	ini := New().Load([]byte(doc))
+	ini := ini.New().Load([]byte(doc))
 
 	v := ini.Section("section").Get("k")
 	if v != "v" {
@@ -79,8 +58,7 @@ c=d
 [section]
 k =v
 `
-	ini := New().Load([]byte(doc))
-	ini.Dump()
+	ini := ini.New().Load([]byte(doc))
 
 	v := ini.Section("section").Get("k")
 	if v != "v" {
@@ -98,10 +76,9 @@ func TestIni4(t *testing.T) {
 a =b
 c= d
 
-a1 = 2.1 
+a1 = 2.1
 `
-	ini := New().Section("").Load([]byte(doc))
-	ini.Dump()
+	ini := ini.New().Section("").Load([]byte(doc))
 	v := ini.Get("a")
 	if v != "b" {
 		t.Errorf("error %s:%d", v, len(v))
@@ -144,9 +121,8 @@ k2= v22
 k =v
 a= b
 `
-	ini := New().Load([]byte(doc))
+	ini := ini.New().Load([]byte(doc))
 	json_str := string(ini.Marshal2Json())
-	fmt.Println(json_str)
 	if json_str != `{"a":"b","s1":{"k":"v","k1":"v12"},"s2":{"k2":"v22"},"s3":{"a":"b","k":"v"}}` {
 		t.Errorf("error %v", json_str)
 	}
@@ -155,24 +131,13 @@ a= b
 
 func TestIniFile(t *testing.T) {
 	file := "./test.ini"
-	ini := New().LoadFile(file)
-	ini.Dump()
+	ini := ini.New().LoadFile(file)
 
-	fmt.Println(string(ini.Marshal2Json()))
-	fmt.Println(ini.Err())
-
-}
-
-func TestIniWatchFile(t *testing.T) {
-	file := "./test.ini"
-
-	ini := New().WatchFile(file)
-	fmt.Println(string(ini.Marshal2Json()))
-
-	time.Sleep(10 * time.Second)
-	fmt.Println(string(ini.Marshal2Json()))
-	ini.StopWatch()
-
+	a := assert.New(t)
+	a.Equal("'23'34?::'<>,.'", ini.Get("a"), "'a' is incorrect")
+	a.Equal("d", ini.Get("c"), "'c' is incorrect")
+	a.Equal(67676, ini.Section("s1").GetInt("k"), "'s1.k' is incorrect")
+	a.Equal("fdasf", ini.Section("s1").Get("k1"), "'s1.k1' is incorrect")
 }
 
 func TestIniDelete(t *testing.T) {
@@ -183,21 +148,13 @@ c=d
 [section]
 
 `
-	ini := New().Load([]byte(doc))
-	fmt.Println("--------------------------------")
-	ini.Dump()
+	ini := ini.New().Load([]byte(doc))
 
-	fmt.Println("--------------------------------")
 	ini.Del("a")
-	ini.Dump()
 
-	fmt.Println("--------------------------------")
 	ini.Del("c")
-	ini.Dump()
 
-	fmt.Println("--------------------------------")
 	ini.Del("k")
-	ini.Dump()
 
 }
 
@@ -208,13 +165,9 @@ k =v
 a=b
 c=d
 `
-	ini := New().Load([]byte(doc)).Section("section")
-	fmt.Println("--------------------------------")
-	ini.Dump()
+	ini := ini.New().Load([]byte(doc)).Section("section")
 
-	fmt.Println("--------------------------------")
 	ini.Set("a", 11).Set("c", 12.3).Section("").Set("k", "SET")
-	ini.Dump()
 
 	v := ini.Section("section").GetInt("a")
 
@@ -233,9 +186,7 @@ c=d
 		t.Errorf("Error: %s", v2)
 	}
 
-	fmt.Println("--------------------------------")
 	ini.Set("a1", 1).Section("section").Set("k1", 11.11)
-	ini.Dump()
 
 }
 
@@ -247,7 +198,7 @@ c11=d12312312
 
 [section]
 k=v
-; dsfads 
+; dsfads
 ;123
 #3452345
 
@@ -258,18 +209,15 @@ k1=v1
 [section3]
 k3=v3
 `
-	ini := New().Load([]byte(doc))
-	ini.Dump()
+	ini := ini.New().Load([]byte(doc))
 
 	ini.Save("./save.ini")
-	fmt.Println(ini.Err())
 }
 
 func TestIniSave2(t *testing.T) {
 
 	filename := "./save.ini"
-	ini := New().Set("a1", 1)
-	ini.Dump()
+	ini := ini.New().Set("a1", 1)
 	ini.Save(filename)
 
 	bts, _ := ioutil.ReadFile(filename)
@@ -282,8 +230,7 @@ func TestIniSave2(t *testing.T) {
 func TestIniSave3(t *testing.T) {
 
 	filename := "./save.ini"
-	ini := New().Set("a1", 1).Section("s1").Set("a2", "v2")
-	ini.Dump()
+	ini := ini.New().Set("a1", 1).Section("s1").Set("a2", "v2")
 	ini.Save(filename)
 
 	bts, _ := ioutil.ReadFile(filename)

@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"github.com/wlevene/ini/token"
+	"github.com/ncpa0cpl/ini/token"
 )
 
 const (
