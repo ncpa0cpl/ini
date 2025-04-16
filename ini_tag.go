@@ -44,9 +44,15 @@ func Unmarshal(data []byte, v interface{}) error {
 			vElem.FieldByName(fieldInfo.Name).SetFloat(value)
 		case reflect.Struct, reflect.Ptr:
 			fieldVal := vElem.FieldByName(fieldInfo.Name)
+
 			sectElem := fieldVal
 			sectType := f.Type
 			sectKind := sectType.Kind()
+
+			if fieldVal.IsZero() && sectKind == reflect.Ptr {
+				fieldVal.Set(reflect.New(fieldVal.Type().Elem()))
+			}
+
 			if sectKind == reflect.Ptr {
 				sectType = sectType.Elem()
 				sectKind = sectType.Kind()
@@ -118,6 +124,11 @@ func Marshal(v interface{}) (string, error) {
 			sectElem := fieldVal
 			sectType := f.Type
 			sectKind := sectType.Kind()
+
+			if fieldVal.IsZero() && sectKind == reflect.Ptr {
+				continue
+			}
+
 			if sectKind == reflect.Ptr {
 				sectType = sectType.Elem()
 				sectKind = sectType.Kind()

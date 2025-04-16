@@ -15,6 +15,11 @@ type TestConfig struct {
 	User User    `ini:"user"`
 }
 
+type TestConfig2 struct {
+	K    string `ini:"k"`
+	User *User  `ini:"user"`
+}
+
 type User struct {
 	Name string `ini:"name"`
 	Age  int    `ini:"age"`
@@ -43,6 +48,25 @@ age=-23
 	a.Equal(int64(3), cfg.K3, "'k3' was not parsed correctly")
 	a.Equal("tom", cfg.User.Name, "'user.name' was not parsed correctly")
 	a.Equal(int(-23), cfg.User.Age, "'user.name' was not parsed correctly")
+}
+
+func TestIniUnmarshal2(t *testing.T) {
+	doc := `
+k=123
+
+[user]
+name=Barbara
+age=54
+`
+
+	cfg := TestConfig2{}
+
+	ini.Unmarshal([]byte(doc), &cfg)
+
+	a := assert.New(t)
+	a.Equal("123", cfg.K, "'k' was not parsed correctly")
+	a.Equal("Barbara", cfg.User.Name, "'user.name' was not parsed correctly")
+	a.Equal(54, cfg.User.Age, "'user.name' was not parsed correctly")
 }
 
 func TestIniMarshal(t *testing.T) {
@@ -74,11 +98,6 @@ age = 100
 	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
 }
 
-type TestConfig2 struct {
-	K    string `ini:"k"`
-	User *User  `ini:"user"`
-}
-
 func TestIniMarshal2(t *testing.T) {
 	a := assert.New(t)
 	cfg := TestConfig2{
@@ -97,6 +116,22 @@ func TestIniMarshal2(t *testing.T) {
 [user]
 name = Tom
 age = 12
+`
+
+	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
+}
+
+func TestIniMarshal3(t *testing.T) {
+	a := assert.New(t)
+	cfg := TestConfig2{
+		K:    "1234%",
+		User: nil,
+	}
+
+	doc, err := ini.Marshal(cfg)
+	a.NoError(err, "marshal operation failed")
+
+	excpectedResult := `k = 1234%
 `
 
 	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
