@@ -222,7 +222,7 @@ func TestIniSave2(t *testing.T) {
 
 	bts, _ := ioutil.ReadFile(filename)
 
-	if string(bts) != "a1 = 1\n" {
+	if string(bts) != "a1=1\n" {
 		t.Errorf("Error: %v", string(bts))
 	}
 }
@@ -235,7 +235,7 @@ func TestIniSave3(t *testing.T) {
 
 	bts, _ := ioutil.ReadFile(filename)
 
-	if string(bts) != "a1 = 1\n\n[s1]\na2 = v2\n" {
+	if string(bts) != "a1=1\n\n[s1]\na2=v2\n" {
 		t.Errorf("Error: %v", string(bts))
 	}
 }

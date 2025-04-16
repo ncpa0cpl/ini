@@ -25,6 +25,12 @@ type User struct {
 	Age  int    `ini:"age"`
 }
 
+type OnlySection struct {
+	SomeSection struct {
+		Value string `ini:"value"`
+	} `init:"some_section"`
+}
+
 func TestIniUnmarshal(t *testing.T) {
 	doc := `
 k=v
@@ -85,14 +91,14 @@ func TestIniMarshal(t *testing.T) {
 	doc, err := ini.Marshal(cfg)
 	a.NoError(err, "marshal operation failed")
 
-	excpectedResult := `k = foobar
-k1 = 1234
-k2 = 420.69
-k3 = -9999
+	excpectedResult := `k=foobar
+k1=1234
+k2=420.69
+k3=-9999
 
 [user]
-name = Brian
-age = 100
+name=Brian
+age=100
 `
 
 	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
@@ -111,11 +117,11 @@ func TestIniMarshal2(t *testing.T) {
 	doc, err := ini.Marshal(cfg)
 	a.NoError(err, "marshal operation failed")
 
-	excpectedResult := `k = 1234%
+	excpectedResult := `k=1234%
 
 [user]
-name = Tom
-age = 12
+name=Tom
+age=12
 `
 
 	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
@@ -131,7 +137,27 @@ func TestIniMarshal3(t *testing.T) {
 	doc, err := ini.Marshal(cfg)
 	a.NoError(err, "marshal operation failed")
 
-	excpectedResult := `k = 1234%
+	excpectedResult := `k=1234%
+`
+
+	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")
+}
+
+func TestIniMarshal4(t *testing.T) {
+	a := assert.New(t)
+	strct := OnlySection{
+		SomeSection: struct {
+			Value string `ini:"value"`
+		}{
+			Value: "1234%",
+		},
+	}
+
+	doc, err := ini.Marshal(&strct)
+	a.NoError(err, "marshal operation failed")
+
+	excpectedResult := `[SomeSection]
+value=1234%
 `
 
 	a.Equal(excpectedResult, doc, "TestConfig was not marshaled correctly")

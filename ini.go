@@ -382,19 +382,19 @@ func (this *Ini) ToString() string {
 		return ""
 	}
 
-	var result string
+	result := ""
 
 	isLastTypeComment := false
 	for c := this.doc.FirstChild(); c != nil; c = c.NextSibling() {
 		if kv_node, ok := c.(*ast.KVNode); ok {
 			isLastTypeComment = false
-			result = fmt.Sprintf("%s%s = %v\n", result, kv_node.Key.Literal, kv_node.Value.Literal)
+			result = fmt.Sprintf("%s%s=%v\n", result, kv_node.Key.Literal, kv_node.Value.Literal)
 			continue
 		}
 
 		if sect_node, ok := c.(*ast.SetcionNode); ok {
 
-			if !isLastTypeComment {
+			if !isLastTypeComment && result != "" {
 				result = fmt.Sprintf("%s\n", result)
 			}
 
@@ -403,7 +403,7 @@ func (this *Ini) ToString() string {
 
 			for c := sect_node.FirstChild(); c != nil; c = c.NextSibling() {
 				if kv_node, ok := c.(*ast.KVNode); ok {
-					result = fmt.Sprintf("%s%s = %v\n", result, kv_node.Key.Literal, kv_node.Value.Literal)
+					result = fmt.Sprintf("%s%s=%v\n", result, kv_node.Key.Literal, kv_node.Value.Literal)
 					continue
 				}
 			}
