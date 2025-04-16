@@ -435,9 +435,9 @@ func (this *Ini) Save(filename string) (*Ini, error) {
 	if err != nil {
 		return this, err
 	}
+	defer file.Close()
 
 	_, err = file.WriteString(result)
-	file.Close()
 
 	return this, err
 }
