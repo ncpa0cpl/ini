@@ -1,6 +1,8 @@
 package lexer
 
 import (
+	"strings"
+
 	"github.com/ncpa0cpl/ini/token"
 )
 
@@ -14,6 +16,7 @@ type Lexer struct {
 	position      int
 	read_position int
 	line          int
+	prevToken     *token.Token
 }
 
 func New(input string) *Lexer {
@@ -92,6 +95,15 @@ func (l *Lexer) skipline() {
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	var ch byte
+
+	if l.prevToken != nil && l.prevToken.Type == token.TokenTypeKEY && l.char != LineBreak {
+		tok.Type = token.TokenTypeVALUE
+		tok.Literal = strings.Trim(string(l.readValue()), " ")
+		l.readChar()
+		l.prevToken = &tok
+		return tok
+	}
+
 	l.skipWhitespace()
 
 	switch l.char {
@@ -129,6 +141,7 @@ func (l *Lexer) NextToken() token.Token {
 	}
 
 	l.readChar()
+	l.prevToken = &tok
 	return tok
 }
 
@@ -184,6 +197,14 @@ func (l *Lexer) readStatement() []byte {
 		l.char != ']' &&
 		l.char != ' ' {
 
+		l.readChar()
+	}
+	return l.Input[position:l.position]
+}
+
+func (l *Lexer) readValue() []byte {
+	position := l.position
+	for l.char != LineBreak {
 		l.readChar()
 	}
 	return l.Input[position:l.position]

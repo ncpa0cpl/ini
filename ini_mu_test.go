@@ -75,6 +75,25 @@ age=54
 	a.Equal(54, cfg.User.Age, "'user.name' was not parsed correctly")
 }
 
+func TestIniUnmarshal23(t *testing.T) {
+	doc := `
+k=Foo Bar Baz I can have whitespaces
+
+[user]
+name=Bara bara
+age=54
+`
+
+	cfg := TestConfig2{}
+
+	ini.Unmarshal([]byte(doc), &cfg)
+
+	a := assert.New(t)
+	a.Equal("Foo Bar Baz I can have whitespaces", cfg.K, "'k' was not parsed correctly")
+	a.Equal("Bara bara", cfg.User.Name, "'user.name' was not parsed correctly")
+	a.Equal(54, cfg.User.Age, "'user.name' was not parsed correctly")
+}
+
 func TestIniMarshal(t *testing.T) {
 	a := assert.New(t)
 	cfg := &TestConfig{
