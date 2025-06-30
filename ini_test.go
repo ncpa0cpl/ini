@@ -1,7 +1,7 @@
 package ini_test
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/ncpa0cpl/ini"
@@ -9,105 +9,81 @@ import (
 )
 
 func TestIni0(t *testing.T) {
+	assert := assert.New(t)
+
 	doc := `
 [section]
 k =v
 `
-	i_doc := ini.New().Load([]byte(doc)).Section("section")
+	section := ini.Parse(doc).Section("section")
 
-	v := i_doc.Get("k")
-	if v != "v" {
-		t.Errorf("error %s", v)
-	}
+	assert.Equal("v", section.Get("k"))
 }
 
 func TestIni2(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 [section]
-k=v
+k=4.20
 k1 = 1
 `
-	ini := ini.New().Load([]byte(doc))
+	doc := ini.Parse(docStr)
+	section := doc.Section("section")
 
-	v := ini.Section("section").Get("k")
-	if v != "v" {
-		t.Errorf("error %s", v)
-	}
+	k, err := section.GetFloat("k")
+	assertNoError(err)
+	assert.Equal(4.20, k)
 
-	iv := ini.GetInt("k1")
-	if iv != 1 {
-		t.Errorf("error %d", iv)
-	}
+	k1, err := section.GetInt("k1")
+	assertNoError(err)
+	assert.Equal(int64(1), k1)
 
-	iv = ini.GetInt("k2")
-	if iv != 0 {
-		t.Errorf("error %d", iv)
-	}
-
-	iv = ini.GetIntDef("k2", 12)
-	if iv != 12 {
-		t.Errorf("error %d", iv)
-	}
-
+	k1u, err := section.GetUint("k1")
+	assertNoError(err)
+	assert.Equal(uint64(1), k1u)
 }
 
 func TestIni3(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 a =b
 c=d
 [section]
-k =v
+kKkK0 =abc def kgoeirj
 `
-	ini := ini.New().Load([]byte(doc))
+	doc := ini.Parse(docStr)
 
-	v := ini.Section("section").Get("k")
-	if v != "v" {
-		t.Errorf("error %s", v)
-	}
-	v = ini.Section("").Get("a")
-	if v != "b" {
-		t.Errorf("error %s", v)
-	}
+	assert.Equal("abc def kgoeirj", doc.Section("section").Get("kKkK0"))
 
+	assert.Equal("b", doc.Get("a"))
+
+	assert.Equal("d", doc.Get("c"))
 }
 
 func TestIni4(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 a =b
 c= d
 
 a1 = 2.1
 `
-	ini := ini.New().Section("").Load([]byte(doc))
-	v := ini.Get("a")
-	if v != "b" {
-		t.Errorf("error %s:%d", v, len(v))
-	}
+	doc := ini.Parse(docStr)
+	assert.Equal("b", doc.Get("a"))
+	assert.Equal("d", doc.Get("c"))
 
-	iv := ini.GetInt("a")
-	if iv != 0 {
-		t.Errorf("error %d", iv)
-	}
-
-	iv = ini.GetIntDef("a", 10)
-	if iv != 10 {
-		t.Errorf("error %d", iv)
-	}
-
-	iv = ini.GetIntDef("a1", 10)
-	if iv != 10 {
-		t.Errorf("error %d", iv)
-	}
-
-	fv := ini.GetFloat64Def("a1", 10)
-	if fv != 2.1 {
-		t.Errorf("error %d", iv)
-	}
-
+	a1, err := doc.GetFloat("a1")
+	assertNoError(err)
+	assert.Equal(2.1, a1)
 }
 
 func TestIni5(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 a =b
 [s1]
 k=v
@@ -121,77 +97,89 @@ k2= v22
 k =v
 a= b
 `
-	ini := ini.New().Load([]byte(doc))
-	json_str := string(ini.Marshal2Json())
-	if json_str != `{"a":"b","s1":{"k":"v","k1":"v12"},"s2":{"k2":"v22"},"s3":{"a":"b","k":"v"}}` {
-		t.Errorf("error %v", json_str)
-	}
+	doc := ini.Parse(docStr)
 
-}
+	assert.Equal([]string{"a"}, doc.Keys())
+	assert.Equal([]string{"s1", "s2", "s3"}, doc.SectionNames())
+	assert.Equal([]string{"k", "k1"}, doc.Section("s1").Keys())
+	assert.Equal([]string{"k2"}, doc.Section("s2").Keys())
+	assert.Equal([]string{"k", "a"}, doc.Section("s3").Keys())
 
-func TestIniFile(t *testing.T) {
-	file := "./test.ini"
-	ini := ini.New().LoadFile(file)
-
-	a := assert.New(t)
-	a.Equal("'23'34?::'<>,.'", ini.Get("a"), "'a' is incorrect")
-	a.Equal("d", ini.Get("c"), "'c' is incorrect")
-	a.Equal(67676, ini.Section("s1").GetInt("k"), "'s1.k' is incorrect")
-	a.Equal("fdasf", ini.Section("s1").Get("k1"), "'s1.k1' is incorrect")
+	s2k2 := doc.Section("s2").Get("k2")
+	assert.Equal("v22", s2k2)
 }
 
 func TestIniDelete(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 k=v
 a=b
 c=d
 [section]
 
 `
-	ini := ini.New().Load([]byte(doc))
+	ini := ini.Parse(docStr)
 
 	ini.Del("a")
+	assert.Equal(`k=v
+c=d
+
+[section]
+`, ini.ToString())
 
 	ini.Del("c")
+	assert.Equal(`k=v
+
+[section]
+`, ini.ToString())
 
 	ini.Del("k")
-
+	assert.Equal(`
+[section]
+`, ini.ToString())
 }
 
 func TestIniSet(t *testing.T) {
-	doc := `
+	assert := assert.New(t)
+
+	docStr := `
 k =v
 [section]
 a=b
 c=d
 `
-	ini := ini.New().Load([]byte(doc)).Section("section")
+	doc := ini.Parse(docStr)
 
-	ini.Set("a", 11).Set("c", 12.3).Section("").Set("k", "SET")
+	section := doc.Section("section")
+	section.SetInt("a", 11)
+	section.SetFloat("c", 12.3)
 
-	v := ini.Section("section").GetInt("a")
+	expectedResult := `k=v
 
-	if v != 11 {
-		t.Errorf("Error: %d", v)
-	}
+[section]
+a=11
+c=12.3
+`
 
-	v1 := ini.GetFloat64("c")
+	assert.Equal(expectedResult, doc.ToString())
 
-	if v1 != 12.3 {
-		t.Errorf("Error: %f", v1)
-	}
+	v, err := doc.Section("section").GetInt("a")
+	assertNoError(err)
+	assert.Equal(int64(11), v)
 
-	v2 := ini.Section("").Get("k")
-	if v2 != "SET" {
-		t.Errorf("Error: %s", v2)
-	}
+	v1, err := doc.Section("section").GetFloat("c")
+	assertNoError(err)
+	assert.Equal(12.3, v1)
 
-	ini.Set("a1", 1).Section("section").Set("k1", 11.11)
-
+	v2 := doc.Get("k")
+	assert.Equal("v", v2)
 }
 
-func TestIniSave(t *testing.T) {
-	doc := `
+func TestIniSaveAndLoad(t *testing.T) {
+	assert := assert.New(t)
+
+	docStr := `
 ; 123
 c11=d12312312
 # 434
@@ -209,33 +197,81 @@ k1=v1
 [section3]
 k3=v3
 `
-	ini := ini.New().Load([]byte(doc))
+	ini.Parse(docStr).Save("./save.ini")
 
-	ini.Save("./save.ini")
+	doc, err := ini.Load("./save.ini")
+	assertNoError(err)
+
+	expectedResult := `; 123
+c11=d12312312
+# 434
+
+[section]
+k=v
+; dsfads
+; 123
+# 3452345
+
+[section1]
+k1=v1
+
+[section3]
+k3=v3
+`
+
+	assert.Equal(expectedResult, doc.ToString())
+}
+
+func TestIniFile(t *testing.T) {
+	file := "./test.ini"
+	doc, err := ini.Load(file)
+	assertNoError(err)
+
+	a := assert.New(t)
+	a.Equal("'23'34?::'<>,.'", doc.Get("a"))
+	a.Equal("d", doc.Get("c"))
+	a.Equal("fdasf", doc.Section("s1").Get("k1"))
+
+	s1k, err := doc.Section("s1").GetInt("k")
+	assertNoError(err)
+	a.Equal(int64(67676), s1k)
+
+	s2 := doc.Section("s2")
+	a.Equal("3", s2.Get("k"))
+	a.Equal("945", s2.Get("k2"))
+	a.Equal("-435", s2.Get("k3"))
+	a.Equal("0.0.0.0", s2.Get("k4"))
+	a.Equal("127.0.0.1", s2.Get("k5"))
+	a.Equal("levene@github.com", s2.Get("k6"))
+	a.Equal("~/.path.txt", s2.Get("k7"))
+	a.Equal("./34/34/uh.txt", s2.Get("k8"))
+	a.Equal("234@!@#$%^&*()324", s2.Get("k9"))
+	a.Equal("'23'34?::'<>,.'", s2.Get("k10"))
 }
 
 func TestIniSave2(t *testing.T) {
+	assert := assert.New(t)
 
 	filename := "./save.ini"
-	ini := ini.New().Set("a1", 1)
-	ini.Save(filename)
+	doc := ini.NewDoc()
+	doc.SetInt("a1", 1)
+	doc.Save(filename)
 
-	bts, _ := ioutil.ReadFile(filename)
+	bts, _ := os.ReadFile(filename)
 
-	if string(bts) != "a1=1\n" {
-		t.Errorf("Error: %v", string(bts))
-	}
+	assert.Equal("a1=1\n", string(bts))
 }
 
 func TestIniSave3(t *testing.T) {
+	assert := assert.New(t)
 
 	filename := "./save.ini"
-	ini := ini.New().Set("a1", 1).Section("s1").Set("a2", "v2")
-	ini.Save(filename)
+	doc := ini.NewDoc()
+	doc.SetInt("a1", 985123)
+	doc.Section("s1").Set("a2", "v2")
+	doc.Save(filename)
 
-	bts, _ := ioutil.ReadFile(filename)
+	bts, _ := os.ReadFile(filename)
 
-	if string(bts) != "a1=1\n\n[s1]\na2=v2\n" {
-		t.Errorf("Error: %v", string(bts))
-	}
+	assert.Equal("a1=985123\n\n[s1]\na2=v2\n", string(bts))
 }
