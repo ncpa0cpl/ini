@@ -43,6 +43,23 @@ func NewDoc() *IniDoc {
 	}
 }
 
+func NewSection() *IniSection {
+	return &IniSection{
+		lines: []iniLine{},
+	}
+}
+
+func (d *IniDoc) putSection(section *IniSection) {
+	for idx := range d.sections {
+		if d.sections[idx].name == section.name {
+			d.sections[idx] = *section
+			return
+		}
+	}
+
+	d.sections = append(d.sections, *section)
+}
+
 func (d *IniDoc) getField(key string) *iniLine {
 	for idx := range d.lines {
 		if d.lines[idx].lineType == lineTypeKv && d.lines[idx].key == key {
@@ -339,6 +356,10 @@ func (d *IniSection) Values() []FieldValue {
 	return keys
 }
 
+func (d *IniSection) SetName(name string) {
+	d.name = name
+}
+
 // serialization
 
 func (f *iniLine) ToString() string {
@@ -398,4 +419,12 @@ func (d *IniDoc) ToString() string {
 	}
 
 	return v
+}
+
+func docToSection(doc *IniDoc) *IniSection {
+	sec := IniSection{
+		lines: make([]iniLine, len(doc.lines)),
+	}
+	copy(sec.lines, doc.lines)
+	return &sec
 }

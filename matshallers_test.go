@@ -31,6 +31,10 @@ type OnlySection struct {
 	} `init:"some_section"`
 }
 
+type BasicKv struct {
+	K string `ini:"k"`
+}
+
 func TestIniUnmarshal(t *testing.T) {
 	docStr := `
 k=v
@@ -361,4 +365,197 @@ corge=false
 `
 
 	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+}
+
+type CustomMarshalIni struct {
+	f   int64
+	br  bool
+	bz  string
+	Qux string  `ini:"qux"`
+	Sec BasicKv `ini:"sec"`
+}
+
+func (m *CustomMarshalIni) UnmarshalINI(doc ini.DocOrSection) error {
+	m.f, _ = doc.GetInt("foo")
+	m.br, _ = doc.GetBool("bar")
+	m.bz = doc.Get("baz")
+	return nil
+}
+
+func (m *CustomMarshalIni) MarshalINI() (ini.DocOrSection, error) {
+	doc := ini.NewDoc()
+	doc.SetInt("foo", m.f)
+	doc.SetBool("bar", m.br)
+	doc.Set("baz", m.bz)
+	return doc, nil
+}
+
+func TestCustomUnmarshalDocStruct(t *testing.T) {
+	assert := assert.New(t)
+
+	docStr := `foo=-420
+bar=true
+baz=hello world
+qux=value
+
+[sec]
+k=v`
+
+	myini := CustomMarshalIni{}
+	assertNoError(ini.Unmarshal(docStr, &myini))
+
+	assert.Equal(int64(-420), myini.f)
+	assert.Equal(true, myini.br)
+	assert.Equal("hello world", myini.bz)
+	assert.Equal("", myini.Qux)   // CustomMarshalIni.UnmarshalINI does not parse the Qux field
+	assert.Equal("", myini.Sec.K) // CustomMarshalIni.UnmarshalINI does not parse the Section
+}
+
+type CustomMarshalSection struct {
+	f   int64
+	br  bool
+	bz  string
+	Qux string `ini:"qux"`
+}
+
+func (m *CustomMarshalSection) UnmarshalINI(doc ini.DocOrSection) error {
+	m.f, _ = doc.GetInt("foo")
+	m.br, _ = doc.GetBool("bar")
+	m.bz = doc.Get("baz")
+	return nil
+}
+
+func (m CustomMarshalSection) MarshalINI() (ini.DocOrSection, error) {
+	section := ini.NewSection()
+	section.SetInt("foo", m.f)
+	section.SetBool("bar", m.br)
+	section.Set("baz", m.bz)
+	return section, nil
+}
+
+func TestCustomUnmarshalSectionStruct(t *testing.T) {
+	assert := assert.New(t)
+
+	type Ini struct {
+		Top           string
+		CustomSection *CustomMarshalSection
+	}
+
+	docStr := `Top=abc
+
+[CustomSection]
+foo=1024
+bar=true
+baz = Lorem ipsum dolor sit amet
+`
+
+	myini := Ini{}
+	assertNoError(ini.Unmarshal(docStr, &myini))
+
+	assert.Equal("abc", myini.Top)
+	assert.Equal(int64(1024), myini.CustomSection.f)
+	assert.Equal(true, myini.CustomSection.br)
+	assert.Equal("Lorem ipsum dolor sit amet", myini.CustomSection.bz)
+}
+
+func TestCustomMarshalDocStruct(t *testing.T) {
+	assert := assert.New(t)
+
+	myini := CustomMarshalIni{
+		f:   512,
+		br:  true,
+		bz:  "|string|",
+		Qux: "(string)",
+		Sec: BasicKv{
+			K: "v",
+		},
+	}
+
+	docStr, err := ini.Marshal(&myini)
+	assertNoError(err)
+
+	expectedResult := `foo=512
+bar=true
+baz=|string|
+`
+
+	assert.Equal(expectedResult, docStr)
+}
+
+func TestCustomMarshalSectionStruct(t *testing.T) {
+	assert := assert.New(t)
+
+	type Ini struct {
+		Top           string
+		CustomSection CustomMarshalSection
+	}
+
+	myini := Ini{
+		Top: "TOP",
+		CustomSection: CustomMarshalSection{
+			f:   -7,
+			br:  false,
+			bz:  "bzbzbz",
+			Qux: "string",
+		},
+	}
+
+	docStr, err := ini.Marshal(myini)
+	assertNoError(err)
+
+	expectedResult := `Top=TOP
+
+[CustomSection]
+foo=-7
+bar=false
+baz=bzbzbz
+`
+
+	assert.Equal(expectedResult, docStr)
+}
+
+type CustomMarshalSection2 struct {
+	Value string
+}
+
+func (m *CustomMarshalSection2) MarshalINI() (ini.DocOrSection, error) {
+	doc := ini.NewDoc()
+	doc.SetInt("version", 1)
+	doc.Set("value1", m.Value)
+	return doc, nil
+}
+
+func TestCustomMarshalSectionStruct2(t *testing.T) {
+	assert := assert.New(t)
+
+	type Ini struct {
+		Top           string
+		CustomSection *CustomMarshalSection2
+		BasicKV       BasicKv
+	}
+
+	myini := Ini{
+		Top: "TOP2",
+		CustomSection: &CustomMarshalSection2{
+			Value: "foobar",
+		},
+		BasicKV: BasicKv{
+			K: "somevalue",
+		},
+	}
+
+	docStr, err := ini.Marshal(myini)
+	assertNoError(err)
+
+	expectedResult := `Top=TOP2
+
+[CustomSection]
+version=1
+value1=foobar
+
+[BasicKV]
+k=somevalue
+`
+
+	assert.Equal(expectedResult, docStr)
 }

@@ -11,6 +11,7 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 * **Unmarshal to Struct**: It provides the ability to map INI data to Go structs, making it convenient to work with structured data.
 * **Marshal from Struct**: You can easily convert Go struct into INI data using the library's marshal functionality.
 * **Write to File**: The library allows you to write INI data back to files.
+* **Custom marshaling via MarshalINI and UnmarshalINI methods, similar to the [custom JSON marshaling](https://pkg.go.dev/encoding/json#example-package-CustomMarshalJSON)
 
 
 ## Installation
@@ -132,6 +133,55 @@ k1=-5
 [user]
 name=Tom
 age=23
+```
+
+### Custom Marshal/Unmarshal
+
+Custom marshaling an un-marshaling can avhieved by implementing these interfaces:
+
+```go
+type Marshalable interface {
+	MarshalINI() (DocOrSection, error)
+}
+
+type Unmarshalable interface {
+	UnmarshalINI(DocOrSection) error
+}
+```
+
+#### Example
+
+```go
+type MySection struct {
+	myPrivateValue string
+}
+
+func (m *MySection) UnmarshalINI(doc DocOrSection) error {
+	m.myPrivateValue = doc.Get("Value")
+	return nil
+}
+
+func (m *MySection) MarshalINI() (DocOrSection, error) {
+	section := ini.NewSection()
+	section.Set("Value", m.myPrivateValue)
+	return doc, nil
+}
+
+type MyIniFile struct {
+	MySection *MySection
+}
+
+doc := "[MySection]\nValue=hello world\n"
+
+myinifile := MyIniFile{}
+err := ini.Unmarshal(doc, &myinifile)
+
+fmt.Println(myinifile.MySection.myPrivateValue) // -> "hello world"
+myinifile.MySection.myPrivateValue = "bye bye"
+
+str, err := ini.Marshal(&myinifile)
+
+fmt.Println(str) // -> "[MySection]\nValue=bye bye\n"
 ```
 
 ### Parse File

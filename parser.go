@@ -11,7 +11,13 @@ const (
 	ParseStepValue
 )
 
-type docOrSection interface {
+type DocOrSection interface {
+	Del(key string)
+	Get(key string) string
+	GetBool(key string) (bool, error)
+	GetFloat(key string) (float64, error)
+	GetInt(key string) (int64, error)
+	GetUint(key string) (uint64, error)
 	Set(key string, value string)
 	SetBool(key string, value bool)
 	SetFieldComment(fieldKey string, value string)
@@ -20,6 +26,7 @@ type docOrSection interface {
 	SetUint(key string, value uint64)
 	AddComment(value string)
 	AddHashComment(value string)
+	ToString() string
 }
 
 func Parse(content string) *IniDoc {
@@ -33,7 +40,7 @@ func Parse(content string) *IniDoc {
 
 	doc := NewDoc()
 
-	var currentDoc docOrSection
+	var currentDoc DocOrSection
 	currentDoc = doc
 
 	for _, char := range content {

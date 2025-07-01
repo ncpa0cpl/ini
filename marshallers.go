@@ -6,12 +6,26 @@ import (
 	"strings"
 )
 
+type Marshalable interface {
+	MarshalINI() (DocOrSection, error)
+}
+
+type Unmarshalable interface {
+	UnmarshalINI(DocOrSection) error
+}
+
 func Unmarshal(data string, v interface{}) error {
 	if v == nil {
 		return fmt.Errorf("given struct is nil")
 	}
 
 	doc := Parse(data)
+
+	vUnmarshalable, ok := v.(Unmarshalable)
+	if ok {
+		err := vUnmarshalable.UnmarshalINI(doc)
+		return err
+	}
 
 	vType := reflect.TypeOf(v)
 	vKind := vType.Kind()
@@ -69,6 +83,17 @@ func Unmarshal(data string, v interface{}) error {
 				fieldVal.Set(reflect.New(fieldVal.Type().Elem()))
 			}
 
+			docSection := doc.Section(fieldInfo.Alias)
+
+			vUnmarshalable, ok := fieldVal.Interface().(Unmarshalable)
+			if ok {
+				err := vUnmarshalable.UnmarshalINI(docSection)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+
 			if sectKind == reflect.Ptr {
 				sectType = sectType.Elem()
 				sectKind = sectType.Kind()
@@ -78,8 +103,6 @@ func Unmarshal(data string, v interface{}) error {
 			if sectKind != reflect.Struct {
 				continue
 			}
-
-			docSection := doc.Section(fieldInfo.Alias)
 
 			sectFields := reflect.VisibleFields(sectType)
 			for _, sectF := range sectFields {
@@ -197,9 +220,15 @@ func Unmarshal(data string, v interface{}) error {
 	return nil
 }
 
-func Marshal(v interface{}) (string, error) {
+func Marshal(v any) (string, error) {
 	if v == nil {
 		return "", fmt.Errorf("given struct is nil")
+	}
+
+	vUnmarshalable, ok := v.(Marshalable)
+	if ok {
+		doc, err := vUnmarshalable.MarshalINI()
+		return doc.ToString(), err
 	}
 
 	doc := NewDoc()
@@ -244,6 +273,31 @@ func Marshal(v interface{}) (string, error) {
 
 			if fieldVal.IsZero() && sectKind == reflect.Ptr {
 				continue
+			}
+
+			vUnmarshalable, ok := fieldVal.Interface().(Marshalable)
+			if ok {
+				secOrDoc, err := vUnmarshalable.MarshalINI()
+				if err != nil {
+					return "", err
+				}
+
+				section, ok := secOrDoc.(*IniSection)
+				if ok {
+					if section.name == "" {
+						section.name = fieldInfo.Alias
+					}
+					doc.putSection(section)
+					continue
+				}
+
+				asDoc, ok := secOrDoc.(*IniDoc)
+				if ok {
+					section := docToSection(asDoc)
+					section.name = fieldInfo.Alias
+					doc.putSection(section)
+					continue
+				}
 			}
 
 			if sectKind == reflect.Ptr {
