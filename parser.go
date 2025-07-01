@@ -35,7 +35,7 @@ func Parse(content string) *IniDoc {
 
 	step := ParseStepLookup
 	escaped := false
-	commentType := ";"
+	commentType := ';'
 	buff := make([]rune, 0, 16)
 
 	doc := NewDoc()
@@ -58,11 +58,11 @@ func Parse(content string) *IniDoc {
 					continue
 				case ';':
 					step = ParseStepComment
-					commentType = ";"
+					commentType = ';'
 					continue
 				case '#':
 					step = ParseStepComment
-					commentType = "#"
+					commentType = '#'
 					continue
 				case ' ', '\n':
 					continue
@@ -125,7 +125,7 @@ func Parse(content string) *IniDoc {
 			}
 		case ParseStepComment:
 			if char == '\n' && !escaped {
-				if commentType == ";" {
+				if commentType == ';' {
 					currentDoc.AddComment(strings.Trim(string(buff), " "))
 				} else {
 					currentDoc.AddHashComment(strings.Trim(string(buff), " "))
