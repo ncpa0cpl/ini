@@ -11,7 +11,7 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 * **Unmarshal to Struct**: It provides the ability to map INI data to Go structs, making it convenient to work with structured data.
 * **Marshal from Struct**: You can easily convert Go struct into INI data using the library's marshal functionality.
 * **Write to File**: The library allows you to write INI data back to files.
-* **Custom marshaling via MarshalINI and UnmarshalINI methods, similar to the [custom JSON marshaling](https://pkg.go.dev/encoding/json#example-package-CustomMarshalJSON)
+* **Custom marshaling**: MarshalINI and UnmarshalINI methods, similar to the [custom JSON marshaling](https://pkg.go.dev/encoding/json#example-package-CustomMarshalJSON)
 
 
 ## Installation
