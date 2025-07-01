@@ -97,6 +97,10 @@ func Parse(content string) *IniDoc {
 				}
 			} else {
 				escaped = false
+				if char == 'N' {
+					buff = append(buff, '\n')
+					continue
+				}
 			}
 			buff = append(buff, char)
 		case ParseStepSection:

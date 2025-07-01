@@ -387,7 +387,7 @@ func (f *iniLine) ToString() string {
 		if f.comment != "" {
 			v += fmt.Sprintf(" ;%s", f.comment)
 		}
-		v = strings.ReplaceAll(v, "\n", "\\n")
+		v = strings.ReplaceAll(v, "\n", "\\N")
 		return v + "\n"
 	case lineTypeComment:
 		var v string

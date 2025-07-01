@@ -294,3 +294,43 @@ func TestIni7(t *testing.T) {
 	assert.Equal("v", doc.Get("k"))
 	assert.Equal("this is comment", doc.GetComment("k"))
 }
+
+func TestMultilineValues(t *testing.T) {
+	assert := assert.New(t)
+
+	doc := ini.NewDoc()
+
+	doc.Set("foo", "foo")
+	doc.Set("multiline", `Lorem ipsum
+dolor sit amet,
+consectetur adipiscing elit.`)
+	doc.Set("bar", "bar")
+
+	docStr := doc.ToString()
+
+	doc2 := ini.Parse(docStr)
+
+	assert.Equal("foo", doc2.Get("foo"))
+	assert.Equal("Lorem ipsum\ndolor sit amet,\nconsectetur adipiscing elit.", doc2.Get("multiline"))
+	assert.Equal("bar", doc2.Get("bar"))
+}
+
+func TestMultilineValues2(t *testing.T) {
+	assert := assert.New(t)
+
+	doc := ini.NewDoc()
+
+	doc.Set("foo", "foo")
+	doc.Set("multiline", `Line One
+Line Two \\N|
+Line Three`)
+	doc.Set("bar", "bar")
+
+	docStr := doc.ToString()
+
+	doc2 := ini.Parse(docStr)
+
+	assert.Equal("foo", doc2.Get("foo"))
+	assert.Equal("Line One\nLine Two \\N|\nLine Three", doc2.Get("multiline"))
+	assert.Equal("bar", doc2.Get("bar"))
+}
