@@ -139,6 +139,15 @@ func (d *IniDoc) SetBool(key string, value bool) {
 	d.Set(key, strVal)
 }
 
+func (d *IniDoc) GetComment(key string) string {
+	f := d.getField(key)
+	if f == nil {
+		return ""
+	} else {
+		return f.comment
+	}
+}
+
 func (d *IniDoc) Get(key string) string {
 	f := d.getField(key)
 	if f == nil {
@@ -297,6 +306,15 @@ func (d *IniSection) SetFloat(key string, value float64) {
 func (d *IniSection) SetBool(key string, value bool) {
 	strVal := strconv.FormatBool(value)
 	d.Set(key, strVal)
+}
+
+func (d *IniSection) GetComment(key string) string {
+	f := d.getField(key)
+	if f == nil {
+		return ""
+	} else {
+		return f.comment
+	}
 }
 
 func (d *IniSection) Get(key string) string {

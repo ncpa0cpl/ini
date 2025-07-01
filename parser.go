@@ -31,7 +31,6 @@ type DocOrSection interface {
 
 func Parse(content string) *IniDoc {
 	var key string
-	var value string
 
 	step := ParseStepLookup
 	escaped := false
@@ -85,17 +84,14 @@ func Parse(content string) *IniDoc {
 			if !escaped {
 				switch char {
 				case ';', '#':
-					value = strings.Trim(string(buff), " ")
+					currentDoc.Set(key, strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
-					currentDoc.Set(key, value)
 					step = ParseStepFieldComment
 					continue
 				case '\n':
-					value = strings.Trim(string(buff), " ")
+					currentDoc.Set(key, strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
-					currentDoc.Set(key, value)
 					key = ""
-					value = ""
 					step = ParseStepLookup
 					continue
 				}
@@ -117,7 +113,6 @@ func Parse(content string) *IniDoc {
 				currentDoc.SetFieldComment(key, strings.Trim(string(buff), " "))
 				buff = make([]rune, 0, 16)
 				key = ""
-				value = ""
 				step = ParseStepLookup
 			} else {
 				escaped = false
@@ -139,10 +134,11 @@ func Parse(content string) *IniDoc {
 		}
 	}
 
-	if key != "" {
-		currentDoc.Set(key, value)
-		if step == ParseStepFieldComment && len(buff) > 0 {
+	if key != "" && len(buff) > 0 {
+		if step == ParseStepFieldComment {
 			currentDoc.SetFieldComment(key, strings.Trim(string(buff), " "))
+		} else {
+			currentDoc.Set(key, strings.Trim(string(buff), " "))
 		}
 	}
 

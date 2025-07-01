@@ -275,3 +275,22 @@ func TestIniSave3(t *testing.T) {
 
 	assert.Equal("a1=985123\n\n[s1]\na2=v2\n", string(bts))
 }
+
+func TestIni6(t *testing.T) {
+	assert := assert.New(t)
+
+	docStr := `k=v`
+	doc := ini.Parse(docStr)
+
+	assert.Equal("v", doc.Get("k"))
+}
+
+func TestIni7(t *testing.T) {
+	assert := assert.New(t)
+
+	docStr := `k=v ;this is comment`
+	doc := ini.Parse(docStr)
+
+	assert.Equal("v", doc.Get("k"))
+	assert.Equal("this is comment", doc.GetComment("k"))
+}
