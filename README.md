@@ -45,7 +45,7 @@ fmt.Println(doc.Get("topLevelValue")) // -> "foo"
 
 section1 := doc.Section("section1")
 
-fmt.Println(section1.Get("k1")) // -> "v"
+fmt.Println(section1.Get("k1")) // -> "v1"
 
 k2, err := section1.GetInt("k2")
 fmt.Println(k2) // -> 1
@@ -137,7 +137,7 @@ age=23
 
 ### Custom Marshal/Unmarshal
 
-Custom marshaling an un-marshaling can avhieved by implementing these interfaces:
+Custom marshaling an un-marshaling can be achieved by implementing these interfaces:
 
 ```go
 type Marshalable interface {
@@ -242,7 +242,7 @@ doc.Set("a1", 1)
 
 doc.Section("FooBar").Set("b", "hello")
 
-err := ini.Save(filename)
+err := doc.Save(filename)
 ```
 
 save.ini
