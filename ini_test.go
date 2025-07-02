@@ -116,7 +116,7 @@ k=v
 a=b
 c=d
 [section]
-
+secA=1
 `
 	iniDoc := ini.Parse(docStr)
 
@@ -125,18 +125,20 @@ c=d
 c=d
 
 [section]
+secA=1
+`)
+
+	iniDoc.Section("section").Del("secA")
+	expect(iniDoc.ToString()).ToBe(`k=v
+c=d
 `)
 
 	iniDoc.Del("c")
 	expect(iniDoc.ToString()).ToBe(`k=v
-
-[section]
 `)
 
 	iniDoc.Del("k")
-	expect(iniDoc.ToString()).ToBe(`
-[section]
-`)
+	expect(iniDoc.ToString()).ToBe("")
 }
 
 func TestIniSet(t *testing.T) {

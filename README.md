@@ -175,8 +175,6 @@ fmt.Println(doc.ToString())
 
 Output:
 ```
-[foo]
-
 [foo.bar]
 key=value
 ```

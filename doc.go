@@ -499,6 +499,10 @@ func (f *iniLine) ToString() string {
 }
 
 func (s *IniSection) ToString() string {
+	if len(s.lines) == 0 {
+		return ""
+	}
+
 	var v string = ""
 
 	if s.comment != "" {
@@ -522,8 +526,11 @@ func (d *IniDoc) ToString() string {
 	}
 
 	for _, section := range d.sections {
-		v += "\n"
-		v += section.ToString()
+		secStr := section.ToString()
+		if secStr != "" {
+			v += "\n"
+			v += secStr
+		}
 	}
 
 	return v
