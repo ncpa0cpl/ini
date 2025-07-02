@@ -12,6 +12,7 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 * **Marshal from Struct**: You can easily convert Go struct into INI data using the library's marshal functionality.
 * **Write to File**: The library allows you to write INI data back to files.
 * **Custom marshaling**: MarshalINI and UnmarshalINI methods, similar to the [custom JSON marshaling](https://pkg.go.dev/encoding/json#example-package-CustomMarshalJSON)
+* **Subsections**: Easily access and add subsections
 
 
 ## Installation
@@ -135,7 +136,7 @@ name=Tom
 age=23
 ```
 
-### Struct Sections
+### Sections
 
 When marshaling/unmarshaling sections can be either nested structs, struct pointers or maps of string keys.
 
@@ -156,6 +157,33 @@ type MyIni struct {
 ```
 
 When using maps for sections, it is required that the map key type is `string`. If the key type is different it will be ignored. Also any values in the map that have a non-primitive type will be ignored as well (for example given a map like this: `map[string]any{"foo": 1, "bar": "hello", "baz": time.Now()}` - only `foo` and `bar` will be marshaled into the ini doc, since `time.Now()` is not of a primitive type.)
+
+#### Subsections
+
+Subsections are a way to nest sections by using dots as path delimiters. For example `foo.bar` is a subsection of a section `foo`.
+
+```go
+doc := ini.NewDoc()
+
+foo := doc.Section("foo")
+fooBar := foo.Section("bar")
+
+fooBar.Set("key", "value")
+
+fmt.Println(doc.ToString())
+```
+
+Output:
+```
+[foo]
+
+[foo.bar]
+key=value
+```
+
+Subsections can also be accessed by specifying the whole path as the argument for `Subsection()` method (e.x. `doc.Section("foo.bar")`)
+
+When marshaling and un-marshaling nested structs will also create or read subsections. Maps cannot have subsections.
 
 ### Custom Marshal/Unmarshal
 
