@@ -26,6 +26,15 @@ func (e *Expect) ToBe(equalTo any) {
 	}
 }
 
+func (e *Expect) ToContain(elems ...any) {
+	for _, el := range elems {
+		pass := e.assert.Contains(e.value, el)
+		if !pass {
+			e.t.FailNow()
+		}
+	}
+}
+
 func (e *Expect) NoErr() {
 	pass := e.assert.Equal(nil, e.value)
 	if !pass {

@@ -147,3 +147,18 @@ ghi=jkl
 
 	expect(doc.ToString()).ToBe(expectedResult)
 }
+
+func TestSections3(t *testing.T) {
+	expect := expect(t)
+
+	docStr := `
+[A.B.C]
+k=v
+`
+
+	doc := ini.Parse(docStr)
+
+	expect(doc.SectionNames()).ToContain("A")
+	expect(doc.SectionNames(true)).ToContain("A", "A.B", "A.B.C")
+	expect(doc.Section("A").Section("B").Section("C").Get("k")).ToBe("v")
+}
