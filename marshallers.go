@@ -174,12 +174,10 @@ func unmarshalField(strct reflect.Value, field reflect.StructField, finfo *field
 	return nil
 }
 
-func Unmarshal(data string, v interface{}) error {
+func UnmarshalDoc(doc *IniDoc, v interface{}) error {
 	if v == nil {
 		return fmt.Errorf("given struct is nil")
 	}
-
-	doc := Parse(data)
 
 	vUnmarshalable, ok := v.(Unmarshalable)
 	if ok {
@@ -383,6 +381,11 @@ func Unmarshal(data string, v interface{}) error {
 	return nil
 }
 
+func Unmarshal(data string, v interface{}) error {
+	doc := Parse(data)
+	return UnmarshalDoc(doc, v)
+}
+
 func marshalField(strct reflect.Value, field reflect.StructField, finfo *fieldInfo, doc DocOrSection) error {
 	switch field.Type.Kind() {
 	case reflect.String:
@@ -518,9 +521,9 @@ func marshalField(strct reflect.Value, field reflect.StructField, finfo *fieldIn
 	return nil
 }
 
-func Marshal(v any) (string, error) {
+func MarshalDoc(v any) (*IniDoc, error) {
 	if v == nil {
-		return "", fmt.Errorf("given struct is nil")
+		return nil, fmt.Errorf("given struct is nil")
 	}
 
 	vUnmarshalable, ok := v.(Marshalable)
@@ -530,10 +533,13 @@ func Marshal(v any) (string, error) {
 		case *IniSection:
 			if v.root != nil {
 				v.root.lines = v.lines
-				doc = v.root
+				return v.root, err
 			}
+		case *IniDoc:
+			return v, err
+		default:
+			panic("MarshalINI returned neither doc or section")
 		}
-		return doc.ToString(), err
 	}
 
 	doc := NewDoc()
@@ -548,7 +554,7 @@ func Marshal(v any) (string, error) {
 	}
 
 	if vKind != reflect.Struct {
-		return "", fmt.Errorf("given value is not a struct")
+		return nil, fmt.Errorf("given value is not a struct")
 	}
 
 	vFields := reflect.VisibleFields(vType)
@@ -556,11 +562,19 @@ func Marshal(v any) (string, error) {
 		fieldInfo := parseFieldTag("ini", f)
 		err := marshalField(vElem, f, fieldInfo, doc)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return doc.ToString(), nil
+	return doc, nil
+}
+
+func Marshal(v any) (string, error) {
+	doc, err := MarshalDoc(v)
+	if err == nil {
+		return doc.ToString(), err
+	}
+	return "", err
 }
 
 type fieldInfo struct {
