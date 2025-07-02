@@ -745,3 +745,108 @@ Key2=second value b
 	expect(iniFile.A.B.C["Key"]).ToBe("value c")
 	expect(iniFile.A.B.C["anotherKey"]).ToBe("1")
 }
+
+type MarshalableWithSubsections struct {
+	top     string
+	subK    string
+	subK2   int
+	subsubK string
+}
+
+func (self MarshalableWithSubsections) MarshalINI() (ini.DocOrSection, error) {
+	sec := ini.NewSection()
+	sec.Set("TOP", self.top)
+
+	sub := sec.Section("SA")
+	sub.Set("K", self.subK)
+	sub.SetInt("K2", int64(self.subK2))
+
+	subsub := sub.Section("B")
+	subsub.Set("K", self.subsubK)
+
+	return sec, nil
+}
+
+func TestCustomSubsectionMarshaling(t *testing.T) {
+	expect := expect(t)
+
+	ini1 := MarshalableWithSubsections{
+		top:     "hello",
+		subK:    "world",
+		subK2:   23,
+		subsubK: "reeee",
+	}
+
+	docStr1, err := ini.Marshal(ini1)
+	expect(err).NoErr()
+
+	expect(docStr1).ToBe(`TOP=hello
+
+[SA]
+K=world
+K2=23
+
+[SA.B]
+K=reeee
+`)
+
+	type IniFile struct {
+		FooBar MarshalableWithSubsections
+	}
+
+	ini2 := IniFile{
+		FooBar: MarshalableWithSubsections{
+			top:     "hello",
+			subK:    "world",
+			subK2:   23,
+			subsubK: "reeee",
+		},
+	}
+
+	docStr2, err := ini.Marshal(ini2)
+	expect(err).NoErr()
+
+	expect(docStr2).ToBe(`
+[FooBar]
+TOP=hello
+
+[FooBar.SA]
+K=world
+K2=23
+
+[FooBar.SA.B]
+K=reeee
+`)
+
+	type FooBarWrapper struct {
+		FooBar MarshalableWithSubsections
+	}
+
+	type IniFile2 struct {
+		Wrapper FooBarWrapper
+	}
+
+	ini3 := IniFile2{
+		Wrapper: FooBarWrapper{MarshalableWithSubsections{
+			top:     "hello",
+			subK:    "world",
+			subK2:   23,
+			subsubK: "reeee",
+		}},
+	}
+
+	docStr3, err := ini.Marshal(ini3)
+	expect(err).NoErr()
+
+	expect(docStr3).ToBe(`
+[Wrapper.FooBar]
+TOP=hello
+
+[Wrapper.FooBar.SA]
+K=world
+K2=23
+
+[Wrapper.FooBar.SA.B]
+K=reeee
+`)
+}

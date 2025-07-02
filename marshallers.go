@@ -526,6 +526,13 @@ func Marshal(v any) (string, error) {
 	vUnmarshalable, ok := v.(Marshalable)
 	if ok {
 		doc, err := vUnmarshalable.MarshalINI()
+		switch v := doc.(type) {
+		case *IniSection:
+			if v.root != nil {
+				v.root.lines = v.lines
+				doc = v.root
+			}
+		}
 		return doc.ToString(), err
 	}
 

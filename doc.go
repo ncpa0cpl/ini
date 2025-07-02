@@ -67,32 +67,32 @@ func (d *IniDoc) createSectionIfNotExist(sectionName string) {
 }
 
 func (d *IniDoc) putSection(section *IniSection) {
-	if section.root != nil && section.root != d {
-		// copy over any subsections
-		for _, s := range section.root.sections {
-			if strings.HasPrefix(s.name, section.name+".") {
+	defer func() {
+		if section.root != nil && section.root != d {
+			// copy over any subsections
+			for _, subSection := range section.root.sections {
 				added := false
-				for _, dsection := range d.sections {
-					if dsection.name == s.name {
-						dsection = s
+				subSection.name = fmt.Sprintf("%s.%s", section.name, subSection.name)
+				for idx, dsection := range d.sections {
+					if dsection.name == subSection.name {
+						d.sections[idx] = subSection
 						added = true
 						break
 					}
 				}
 				if !added {
-					d.sections = append(d.sections, s)
+					d.sections = append(d.sections, subSection)
 				}
 			}
 		}
-	}
+	}()
 
-	for _, dsection := range d.sections {
+	for idx, dsection := range d.sections {
 		if dsection.name == section.name {
-			dsection = section
+			d.sections[idx] = section
 			return
 		}
 	}
-
 	d.sections = append(d.sections, section)
 }
 
@@ -245,7 +245,9 @@ func (d *IniDoc) Section(sectionName string) *IniSection {
 		nextSection := ""
 		for _, seg := range segments {
 			nextSection += seg
-			d.createSectionIfNotExist(nextSection)
+			if nextSection != "" {
+				d.createSectionIfNotExist(nextSection)
+			}
 			nextSection += "."
 		}
 	}
@@ -287,13 +289,13 @@ func (d *IniDoc) SectionNames(includeSubsections ...bool) []string {
 
 func (d *IniSection) putSubSection(section *IniSection) {
 	section.name = fmt.Sprintf("%s.%s", d.name, section.name)
-	if section.root != nil {
-		for _, s := range section.root.sections {
-			if s.name != section.name {
-				s.name = fmt.Sprintf("%s.%s", section.name, s.name)
-			}
-		}
-	}
+	// if section.root != nil {
+	// 	for _, s := range section.root.sections {
+	// 		if s.name != section.name {
+	// 			s.name = fmt.Sprintf("%s.%s", section.name, s.name)
+	// 		}
+	// 	}
+	// }
 	d.root.putSection(section)
 }
 
@@ -431,7 +433,11 @@ func (d *IniSection) Section(sectionName string) *IniSection {
 		d.root = &IniDoc{}
 	}
 
-	return d.root.Section(fmt.Sprintf("%s.%s", d.name, sectionName))
+	if d.name != "" {
+		return d.root.Section(fmt.Sprintf("%s.%s", d.name, sectionName))
+	}
+
+	return d.root.Section(sectionName)
 }
 
 func (d *IniSection) Keys() []string {
