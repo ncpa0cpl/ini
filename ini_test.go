@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	"github.com/ncpa0cpl/ini"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestIni0(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := `
 [section]
@@ -17,11 +16,11 @@ k =v
 `
 	section := ini.Parse(doc).Section("section")
 
-	assert.Equal("v", section.Get("k"))
+	expect(section.Get("k")).ToBe("v")
 }
 
 func TestIni2(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 [section]
@@ -32,20 +31,20 @@ k1 = 1
 	section := doc.Section("section")
 
 	k, err := section.GetFloat("k")
-	assertNoError(err)
-	assert.Equal(4.20, k)
+	expect(err).NoErr()
+	expect(k).ToBe(4.20)
 
 	k1, err := section.GetInt("k1")
-	assertNoError(err)
-	assert.Equal(int64(1), k1)
+	expect(err).NoErr()
+	expect(k1).ToBe(int64(1))
 
 	k1u, err := section.GetUint("k1")
-	assertNoError(err)
-	assert.Equal(uint64(1), k1u)
+	expect(err).NoErr()
+	expect(k1u).ToBe(uint64(1))
 }
 
 func TestIni3(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 a =b
@@ -55,15 +54,15 @@ kKkK0 =abc def kgoeirj
 `
 	doc := ini.Parse(docStr)
 
-	assert.Equal("abc def kgoeirj", doc.Section("section").Get("kKkK0"))
+	expect(doc.Section("section").Get("kKkK0")).ToBe("abc def kgoeirj")
 
-	assert.Equal("b", doc.Get("a"))
+	expect(doc.Get("a")).ToBe("b")
 
-	assert.Equal("d", doc.Get("c"))
+	expect(doc.Get("c")).ToBe("d")
 }
 
 func TestIni4(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 a =b
@@ -72,16 +71,16 @@ c= d
 a1 = 2.1
 `
 	doc := ini.Parse(docStr)
-	assert.Equal("b", doc.Get("a"))
-	assert.Equal("d", doc.Get("c"))
+	expect(doc.Get("a")).ToBe("b")
+	expect(doc.Get("c")).ToBe("d")
 
 	a1, err := doc.GetFloat("a1")
-	assertNoError(err)
-	assert.Equal(2.1, a1)
+	expect(err).NoErr()
+	expect(a1).ToBe(2.1)
 }
 
 func TestIni5(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 a =b
@@ -99,18 +98,18 @@ a= b
 `
 	doc := ini.Parse(docStr)
 
-	assert.Equal([]string{"a"}, doc.Keys())
-	assert.Equal([]string{"s1", "s2", "s3"}, doc.SectionNames())
-	assert.Equal([]string{"k", "k1"}, doc.Section("s1").Keys())
-	assert.Equal([]string{"k2"}, doc.Section("s2").Keys())
-	assert.Equal([]string{"k", "a"}, doc.Section("s3").Keys())
+	expect(doc.Keys()).ToBe([]string{"a"})
+	expect(doc.SectionNames()).ToBe([]string{"s1", "s2", "s3"})
+	expect(doc.Section("s1").Keys()).ToBe([]string{"k", "k1"})
+	expect(doc.Section("s2").Keys()).ToBe([]string{"k2"})
+	expect(doc.Section("s3").Keys()).ToBe([]string{"k", "a"})
 
 	s2k2 := doc.Section("s2").Get("k2")
-	assert.Equal("v22", s2k2)
+	expect(s2k2).ToBe("v22")
 }
 
 func TestIniDelete(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 k=v
@@ -119,29 +118,29 @@ c=d
 [section]
 
 `
-	ini := ini.Parse(docStr)
+	iniDoc := ini.Parse(docStr)
 
-	ini.Del("a")
-	assert.Equal(`k=v
+	iniDoc.Del("a")
+	expect(iniDoc.ToString()).ToBe(`k=v
 c=d
 
 [section]
-`, ini.ToString())
+`)
 
-	ini.Del("c")
-	assert.Equal(`k=v
+	iniDoc.Del("c")
+	expect(iniDoc.ToString()).ToBe(`k=v
 
 [section]
-`, ini.ToString())
+`)
 
-	ini.Del("k")
-	assert.Equal(`
+	iniDoc.Del("k")
+	expect(iniDoc.ToString()).ToBe(`
 [section]
-`, ini.ToString())
+`)
 }
 
 func TestIniSet(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 k =v
@@ -162,22 +161,22 @@ a=11
 c=12.3
 `
 
-	assert.Equal(expectedResult, doc.ToString())
+	expect(doc.ToString()).ToBe(expectedResult)
 
 	v, err := doc.Section("section").GetInt("a")
-	assertNoError(err)
-	assert.Equal(int64(11), v)
+	expect(err).NoErr()
+	expect(v).ToBe(int64(11))
 
 	v1, err := doc.Section("section").GetFloat("c")
-	assertNoError(err)
-	assert.Equal(12.3, v1)
+	expect(err).NoErr()
+	expect(v1).ToBe(12.3)
 
 	v2 := doc.Get("k")
-	assert.Equal("v", v2)
+	expect(v2).ToBe("v")
 }
 
 func TestIniSaveAndLoad(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `
 ; 123
@@ -200,7 +199,7 @@ k3=v3
 	ini.Parse(docStr).Save("./save.ini")
 
 	doc, err := ini.Load("./save.ini")
-	assertNoError(err)
+	expect(err).NoErr()
 
 	expectedResult := `; 123
 c11=d12312312
@@ -219,38 +218,39 @@ k1=v1
 k3=v3
 `
 
-	assert.Equal(expectedResult, doc.ToString())
+	expect(doc.ToString()).ToBe(expectedResult)
 }
 
 func TestIniFile(t *testing.T) {
+	expect := expect(t)
+
 	file := "./test.ini"
 	doc, err := ini.Load(file)
-	assertNoError(err)
+	expect(err).NoErr()
 
-	a := assert.New(t)
-	a.Equal("'23'34?::'<>,.'", doc.Get("a"))
-	a.Equal("d", doc.Get("c"))
-	a.Equal("fdasf", doc.Section("s1").Get("k1"))
+	expect(doc.Get("a")).ToBe("'23'34?::'<>,.'")
+	expect(doc.Get("c")).ToBe("d")
+	expect(doc.Section("s1").Get("k1")).ToBe("fdasf")
 
 	s1k, err := doc.Section("s1").GetInt("k")
-	assertNoError(err)
-	a.Equal(int64(67676), s1k)
+	expect(err).NoErr()
+	expect(s1k).ToBe(int64(67676))
 
 	s2 := doc.Section("s2")
-	a.Equal("3", s2.Get("k"))
-	a.Equal("945", s2.Get("k2"))
-	a.Equal("-435", s2.Get("k3"))
-	a.Equal("0.0.0.0", s2.Get("k4"))
-	a.Equal("127.0.0.1", s2.Get("k5"))
-	a.Equal("levene@github.com", s2.Get("k6"))
-	a.Equal("~/.path.txt", s2.Get("k7"))
-	a.Equal("./34/34/uh.txt", s2.Get("k8"))
-	a.Equal("234@!@#$%^&*()324", s2.Get("k9"))
-	a.Equal("'23'34?::'<>,.'", s2.Get("k10"))
+	expect(s2.Get("k")).ToBe("3")
+	expect(s2.Get("k2")).ToBe("945")
+	expect(s2.Get("k3")).ToBe("-435")
+	expect(s2.Get("k4")).ToBe("0.0.0.0")
+	expect(s2.Get("k5")).ToBe("127.0.0.1")
+	expect(s2.Get("k6")).ToBe("levene@github.com")
+	expect(s2.Get("k7")).ToBe("~/.path.txt")
+	expect(s2.Get("k8")).ToBe("./34/34/uh.txt")
+	expect(s2.Get("k9")).ToBe("234@!@#$%^&*()324")
+	expect(s2.Get("k10")).ToBe("'23'34?::'<>,.'")
 }
 
 func TestIniSave2(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	filename := "./save.ini"
 	doc := ini.NewDoc()
@@ -259,11 +259,11 @@ func TestIniSave2(t *testing.T) {
 
 	bts, _ := os.ReadFile(filename)
 
-	assert.Equal("a1=1\n", string(bts))
+	expect(string(bts)).ToBe("a1=1\n")
 }
 
 func TestIniSave3(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	filename := "./save.ini"
 	doc := ini.NewDoc()
@@ -273,30 +273,30 @@ func TestIniSave3(t *testing.T) {
 
 	bts, _ := os.ReadFile(filename)
 
-	assert.Equal("a1=985123\n\n[s1]\na2=v2\n", string(bts))
+	expect(string(bts)).ToBe("a1=985123\n\n[s1]\na2=v2\n")
 }
 
 func TestIni6(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `k=v`
 	doc := ini.Parse(docStr)
 
-	assert.Equal("v", doc.Get("k"))
+	expect(doc.Get("k")).ToBe("v")
 }
 
 func TestIni7(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `k=v ;this is comment`
 	doc := ini.Parse(docStr)
 
-	assert.Equal("v", doc.Get("k"))
-	assert.Equal("this is comment", doc.GetComment("k"))
+	expect(doc.Get("k")).ToBe("v")
+	expect(doc.GetComment("k")).ToBe("this is comment")
 }
 
 func TestMultilineValues(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := ini.NewDoc()
 
@@ -310,13 +310,13 @@ consectetur adipiscing elit.`)
 
 	doc2 := ini.Parse(docStr)
 
-	assert.Equal("foo", doc2.Get("foo"))
-	assert.Equal("Lorem ipsum\ndolor sit amet,\nconsectetur adipiscing elit.", doc2.Get("multiline"))
-	assert.Equal("bar", doc2.Get("bar"))
+	expect(doc2.Get("foo")).ToBe("foo")
+	expect(doc2.Get("multiline")).ToBe("Lorem ipsum\ndolor sit amet,\nconsectetur adipiscing elit.")
+	expect(doc2.Get("bar")).ToBe("bar")
 }
 
 func TestMultilineValues2(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := ini.NewDoc()
 
@@ -330,13 +330,13 @@ Line Three`)
 
 	doc2 := ini.Parse(docStr)
 
-	assert.Equal("foo", doc2.Get("foo"))
-	assert.Equal("Line One\nLine Two \\N|\nLine Three", doc2.Get("multiline"))
-	assert.Equal("bar", doc2.Get("bar"))
+	expect(doc2.Get("foo")).ToBe("foo")
+	expect(doc2.Get("multiline")).ToBe("Line One\nLine Two \\N|\nLine Three")
+	expect(doc2.Get("bar")).ToBe("bar")
 }
 
 func TestDocSetCharEscaping(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := ini.NewDoc()
 
@@ -347,9 +347,9 @@ func TestDocSetCharEscaping(t *testing.T) {
 
 	expectedResult := "key=value\\;not a comment \\# also not a comment = foobar ;this is a comment\n"
 
-	assert.Equal(expectedResult, docStr)
+	expect(docStr).ToBe(expectedResult)
 
 	doc2 := ini.Parse(docStr)
 
-	assert.Equal("value;not a comment # also not a comment = foobar", doc2.Get("key"))
+	expect(doc2.Get("key")).ToBe("value;not a comment # also not a comment = foobar")
 }

@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/ncpa0cpl/ini"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDoc(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := ini.NewDoc()
 	doc.AddComment("this is a comment")
@@ -30,11 +29,11 @@ bl2=false
 flt=1.2345
 int=420
 `
-	assert.Equal(expectedResult, stringifiedDoc)
+	expect(stringifiedDoc).ToBe(expectedResult)
 }
 
 func TestDocSection(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	doc := ini.NewDoc()
 	doc.Set("top", "lorem ipsum")
@@ -63,5 +62,5 @@ is=false
 bazquux=foobar
 number=-999
 `
-	assert.Equal(expectedResult, stringifiedDoc)
+	expect(stringifiedDoc).ToBe(expectedResult)
 }

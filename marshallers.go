@@ -3,6 +3,7 @@ package ini
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -347,7 +348,12 @@ func Marshal(v any) (string, error) {
 
 			docSection := doc.Section(fieldInfo.Alias)
 
-			for _, key := range fieldVal.MapKeys() {
+			mapKeys := fieldVal.MapKeys()
+			slices.SortFunc(mapKeys, func(a, b reflect.Value) int {
+				return strings.Compare(a.String(), b.String())
+			})
+
+			for _, key := range mapKeys {
 				value := fieldVal.MapIndex(key)
 				valueKind := value.Kind()
 

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/ncpa0cpl/ini"
-	"github.com/stretchr/testify/assert"
 )
 
 type TestConfig struct {
@@ -36,6 +35,8 @@ type BasicKv struct {
 }
 
 func TestIniUnmarshal(t *testing.T) {
+	expect := expect(t)
+
 	docStr := `
 k=v
 k1=2
@@ -49,18 +50,19 @@ age=-23
 
 	cfg := TestConfig{}
 
-	assertNoError(ini.Unmarshal(docStr, &cfg))
+	expect(ini.Unmarshal(docStr, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal("v", cfg.K, "'k' was not parsed correctly")
-	a.Equal(int(2), cfg.K1, "'k1' was not parsed correctly")
-	a.Equal(float64(2.2), cfg.K2, "'k2' was not parsed correctly")
-	a.Equal(int64(3), cfg.K3, "'k3' was not parsed correctly")
-	a.Equal("tom", cfg.User.Name, "'user.name' was not parsed correctly")
-	a.Equal(int(-23), cfg.User.Age, "'user.name' was not parsed correctly")
+	expect(cfg.K).ToBe("v")
+	expect(cfg.K1).ToBe(int(2))
+	expect(cfg.K2).ToBe(float64(2.2))
+	expect(cfg.K3).ToBe(int64(3))
+	expect(cfg.User.Name).ToBe("tom")
+	expect(cfg.User.Age).ToBe(int(-23))
 }
 
 func TestIniUnmarshal2(t *testing.T) {
+	expect := expect(t)
+
 	docStr := `
 k=123
 isTrue=true
@@ -89,19 +91,20 @@ isDead=false
 
 	cfg := TestConfig4{}
 
-	assertNoError(ini.Unmarshal(docStr, &cfg))
+	expect(ini.Unmarshal(docStr, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal("123", cfg.K, "'k' was not parsed correctly")
-	a.Equal("Barbara", cfg.User.Name, "'user.name' was not parsed correctly")
-	a.Equal(54, cfg.User.Age, "'user.name' was not parsed correctly")
-	a.Equal(true, cfg.IsTrue, "'user.isTrue' was not parsed correctly")
-	a.Equal(false, cfg.IsFalse, "'user.isFalse' was not parsed correctly")
-	a.Equal(true, cfg.User.CanDrink, "'user.canDrink' was not parsed correctly")
-	a.Equal(false, cfg.User.IsDead, "'user.isDead' was not parsed correctly")
+	expect(cfg.K).ToBe("123")
+	expect(cfg.User.Name).ToBe("Barbara")
+	expect(cfg.User.Age).ToBe(54)
+	expect(cfg.IsTrue).ToBe(true)
+	expect(cfg.IsFalse).ToBe(false)
+	expect(cfg.User.CanDrink).ToBe(true)
+	expect(cfg.User.IsDead).ToBe(false)
 }
 
 func TestIniUnmarshal3(t *testing.T) {
+	expect := expect(t)
+
 	doc := `
 k=Foo Bar Baz I can have whitespaces
 
@@ -112,15 +115,16 @@ age=54
 
 	cfg := TestConfig2{}
 
-	assertNoError(ini.Unmarshal(doc, &cfg))
+	expect(ini.Unmarshal(doc, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal("Foo Bar Baz I can have whitespaces", cfg.K, "'k' was not parsed correctly")
-	a.Equal("Bara bara", cfg.User.Name, "'user.name' was not parsed correctly")
-	a.Equal(54, cfg.User.Age, "'user.name' was not parsed correctly")
+	expect(cfg.K).ToBe("Foo Bar Baz I can have whitespaces")
+	expect(cfg.User.Name).ToBe("Bara bara")
+	expect(cfg.User.Age).ToBe(54)
 }
 
 func TestIniUnmarshal4(t *testing.T) {
+	expect := expect(t)
+
 	doc := `[MapStrToStr]
 foo=bar
 baz=quux
@@ -133,15 +137,16 @@ corge=gorge
 
 	cfg := WithMapSection{}
 
-	assertNoError(ini.Unmarshal(doc, &cfg))
+	expect(ini.Unmarshal(doc, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal("bar", cfg.MapStrToStr["foo"])
-	a.Equal("quux", cfg.MapStrToStr["baz"])
-	a.Equal("gorge", cfg.MapStrToStr["corge"])
+	expect(cfg.MapStrToStr["foo"]).ToBe("bar")
+	expect(cfg.MapStrToStr["baz"]).ToBe("quux")
+	expect(cfg.MapStrToStr["corge"]).ToBe("gorge")
 }
 
 func TestIniUnmarshal5(t *testing.T) {
+	expect := expect(t)
+
 	doc := `[MapStrToInt]
 foo=1
 baz=-312
@@ -154,15 +159,16 @@ corge=6969
 
 	cfg := WithMapSection{}
 
-	assertNoError(ini.Unmarshal(doc, &cfg))
+	expect(ini.Unmarshal(doc, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal(1, cfg.MapStrToInt["foo"])
-	a.Equal(-312, cfg.MapStrToInt["baz"])
-	a.Equal(6969, cfg.MapStrToInt["corge"])
+	expect(cfg.MapStrToInt["foo"]).ToBe(1)
+	expect(cfg.MapStrToInt["baz"]).ToBe(-312)
+	expect(cfg.MapStrToInt["corge"]).ToBe(6969)
 }
 
 func TestIniUnmarshal6(t *testing.T) {
+	expect := expect(t)
+
 	doc := `[MapStrToInterface]
 foo=1
 bar=0.0001
@@ -176,17 +182,16 @@ corge=true
 
 	cfg := WithMapSection{}
 
-	assertNoError(ini.Unmarshal(doc, &cfg))
+	expect(ini.Unmarshal(doc, &cfg)).NoErr()
 
-	a := assert.New(t)
-	a.Equal("1", cfg.MapStrToInterface["foo"])
-	a.Equal("0.0001", cfg.MapStrToInterface["bar"])
-	a.Equal("hello", cfg.MapStrToInterface["baz"])
-	a.Equal("true", cfg.MapStrToInterface["corge"])
+	expect(cfg.MapStrToInterface["foo"]).ToBe("1")
+	expect(cfg.MapStrToInterface["bar"]).ToBe("0.0001")
+	expect(cfg.MapStrToInterface["baz"]).ToBe("hello")
+	expect(cfg.MapStrToInterface["corge"]).ToBe("true")
 }
 
 func TestIniMarshal(t *testing.T) {
-	a := assert.New(t)
+	expect := expect(t)
 	cfg := &TestConfig{
 		K:  " foobar ",
 		K1: 1234,
@@ -199,7 +204,7 @@ func TestIniMarshal(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(cfg)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `k=foobar
 k1=1234
@@ -211,11 +216,11 @@ name=Brian
 age=100
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal2(t *testing.T) {
-	a := assert.New(t)
+	expect := expect(t)
 	cfg := TestConfig2{
 		K: "1234%",
 		User: &User{
@@ -225,7 +230,7 @@ func TestIniMarshal2(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(cfg)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `k=1234%
 
@@ -234,27 +239,27 @@ name=Tom
 age=12
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal3(t *testing.T) {
-	a := assert.New(t)
+	expect := expect(t)
 	cfg := TestConfig2{
 		K:    "1234%",
 		User: nil,
 	}
 
 	doc, err := ini.Marshal(cfg)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `k=1234%
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal4(t *testing.T) {
-	a := assert.New(t)
+	expect := expect(t)
 	strct := OnlySection{
 		SomeSection: struct {
 			Value string `ini:"value"`
@@ -264,14 +269,14 @@ func TestIniMarshal4(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(&strct)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `
 [SomeSection]
 value=1234%
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal5(t *testing.T) {
@@ -281,7 +286,7 @@ func TestIniMarshal5(t *testing.T) {
 		MapSection map[string]string
 	}
 
-	a := assert.New(t)
+	expect := expect(t)
 	strct := WithMapSection{
 		TopLevelValue: "hello",
 		MapSection: map[string]string{
@@ -291,16 +296,16 @@ func TestIniMarshal5(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(&strct)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `TopLevelValue=hello
 
 [MapSection]
-foo=bar
 1=world
+foo=bar
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal6(t *testing.T) {
@@ -310,7 +315,7 @@ func TestIniMarshal6(t *testing.T) {
 		MapSection map[string]int64
 	}
 
-	a := assert.New(t)
+	expect := expect(t)
 	strct := WithMapSection{
 		TopLevelValue: "hello",
 		MapSection: map[string]int64{
@@ -320,7 +325,7 @@ func TestIniMarshal6(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(&strct)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `TopLevelValue=hello
 
@@ -329,7 +334,7 @@ bar=420
 foo=69
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 func TestIniMarshal7(t *testing.T) {
@@ -339,7 +344,7 @@ func TestIniMarshal7(t *testing.T) {
 		MapSection map[string]any
 	}
 
-	a := assert.New(t)
+	expect := expect(t)
 	strct := WithMapSection{
 		TopLevelValue: "hello",
 		MapSection: map[string]any{
@@ -353,18 +358,18 @@ func TestIniMarshal7(t *testing.T) {
 	}
 
 	doc, err := ini.Marshal(&strct)
-	a.NoError(err, "marshal operation failed")
+	expect(err).NoErr()
 
 	expectedResult := `TopLevelValue=hello
 
 [MapSection]
-foo=bar
 baz=420
-quux=true
 corge=false
+foo=bar
+quux=true
 `
 
-	a.Equal(expectedResult, doc, "TestConfig was not marshaled correctly")
+	expect(doc).ToBe(expectedResult)
 }
 
 type CustomMarshalIni struct {
@@ -391,7 +396,7 @@ func (m *CustomMarshalIni) MarshalINI() (ini.DocOrSection, error) {
 }
 
 func TestCustomUnmarshalDocStruct(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	docStr := `foo=-420
 bar=true
@@ -402,13 +407,13 @@ qux=value
 k=v`
 
 	myini := CustomMarshalIni{}
-	assertNoError(ini.Unmarshal(docStr, &myini))
+	expect(ini.Unmarshal(docStr, &myini)).NoErr()
 
-	assert.Equal(int64(-420), myini.f)
-	assert.Equal(true, myini.br)
-	assert.Equal("hello world", myini.bz)
-	assert.Equal("", myini.Qux)   // CustomMarshalIni.UnmarshalINI does not parse the Qux field
-	assert.Equal("", myini.Sec.K) // CustomMarshalIni.UnmarshalINI does not parse the Section
+	expect(myini.f).ToBe(int64(-420))
+	expect(myini.br).ToBe(true)
+	expect(myini.bz).ToBe("hello world")
+	expect(myini.Qux).ToBe("")   // CustomMarshalIni.UnmarshalINI does not parse the Qux field
+	expect(myini.Sec.K).ToBe("") // CustomMarshalIni.UnmarshalINI does not parse the Section
 }
 
 type CustomMarshalSection struct {
@@ -434,7 +439,7 @@ func (m CustomMarshalSection) MarshalINI() (ini.DocOrSection, error) {
 }
 
 func TestCustomUnmarshalSectionStruct(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	type Ini struct {
 		Top           string
@@ -450,16 +455,16 @@ baz = Lorem ipsum dolor sit amet
 `
 
 	myini := Ini{}
-	assertNoError(ini.Unmarshal(docStr, &myini))
+	expect(ini.Unmarshal(docStr, &myini)).NoErr()
 
-	assert.Equal("abc", myini.Top)
-	assert.Equal(int64(1024), myini.CustomSection.f)
-	assert.Equal(true, myini.CustomSection.br)
-	assert.Equal("Lorem ipsum dolor sit amet", myini.CustomSection.bz)
+	expect(myini.Top).ToBe("abc")
+	expect(myini.CustomSection.f).ToBe(int64(1024))
+	expect(myini.CustomSection.br).ToBe(true)
+	expect(myini.CustomSection.bz).ToBe("Lorem ipsum dolor sit amet")
 }
 
 func TestCustomMarshalDocStruct(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	myini := CustomMarshalIni{
 		f:   512,
@@ -472,18 +477,18 @@ func TestCustomMarshalDocStruct(t *testing.T) {
 	}
 
 	docStr, err := ini.Marshal(&myini)
-	assertNoError(err)
+	expect(err).NoErr()
 
 	expectedResult := `foo=512
 bar=true
 baz=|string|
 `
 
-	assert.Equal(expectedResult, docStr)
+	expect(docStr).ToBe(expectedResult)
 }
 
 func TestCustomMarshalSectionStruct(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	type Ini struct {
 		Top           string
@@ -501,7 +506,7 @@ func TestCustomMarshalSectionStruct(t *testing.T) {
 	}
 
 	docStr, err := ini.Marshal(myini)
-	assertNoError(err)
+	expect(err).NoErr()
 
 	expectedResult := `Top=TOP
 
@@ -511,7 +516,7 @@ bar=false
 baz=bzbzbz
 `
 
-	assert.Equal(expectedResult, docStr)
+	expect(docStr).ToBe(expectedResult)
 }
 
 type CustomMarshalSection2 struct {
@@ -526,7 +531,7 @@ func (m *CustomMarshalSection2) MarshalINI() (ini.DocOrSection, error) {
 }
 
 func TestCustomMarshalSectionStruct2(t *testing.T) {
-	assert := assert.New(t)
+	expect := expect(t)
 
 	type Ini struct {
 		Top           string
@@ -545,7 +550,7 @@ func TestCustomMarshalSectionStruct2(t *testing.T) {
 	}
 
 	docStr, err := ini.Marshal(myini)
-	assertNoError(err)
+	expect(err).NoErr()
 
 	expectedResult := `Top=TOP2
 
@@ -557,5 +562,5 @@ value1=foobar
 k=somevalue
 `
 
-	assert.Equal(expectedResult, docStr)
+	expect(docStr).ToBe(expectedResult)
 }
