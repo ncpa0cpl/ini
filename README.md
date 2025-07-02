@@ -190,7 +190,7 @@ Output:
 key=value
 ```
 
-Subsections can also be accessed by specifying the whole path as the argument for `Subsection()` method (e.x. `doc.Section("foo.bar")`)
+Subsections can also be accessed by specifying the whole path as the argument for `Section()` method (e.x. `doc.Section("foo.bar")`)
 
 When marshaling and un-marshaling nested structs will also create or read subsections. Maps cannot have subsections.
 
