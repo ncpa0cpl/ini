@@ -135,6 +135,28 @@ name=Tom
 age=23
 ```
 
+### Struct Sections
+
+When marshaling/unmarshaling sections can be either nested structs, struct pointers or maps of string keys.
+
+```go
+type MySectionStruct struct {
+	K string
+}
+
+type MyIni struct {
+	TopLevelValue string
+
+	Section1 MySectionStruct
+
+	Section2 *MySectionStruct
+
+	Section3 map[string]string
+}
+```
+
+When using maps for sections, it is required that the map key type is `string`. If the key type is different it will be ignored. Also any values in the map that have a non-primitive type will be ignored as well (for example given a map like this: `map[string]any{"foo": 1, "bar": "hello", "baz": time.Now()}` - only `foo` and `bar` will be marshaled into the ini doc, since `time.Now()` is not of a primitive type.)
+
 ### Custom Marshal/Unmarshal
 
 Custom marshaling an un-marshaling can be achieved by implementing these interfaces:
