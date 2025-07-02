@@ -72,14 +72,22 @@ func Parse(content string) *IniDoc {
 			step = ParseStepKey
 			buff = append(buff, char)
 		case ParseStepKey:
-			if char == '=' && !escaped {
-				key = strings.Trim(string(buff), " ")
+			switch char {
+			case '=':
+				if !escaped {
+					key = strings.Trim(string(buff), " ")
+					buff = make([]rune, 0, 16)
+					step = ParseStepValue
+				} else {
+					buff = append(buff, char)
+				}
+			case '\n':
 				buff = make([]rune, 0, 16)
-				step = ParseStepValue
-			} else {
-				escaped = false
+				step = ParseStepLookup
+			default:
 				buff = append(buff, char)
 			}
+			escaped = false
 		case ParseStepValue:
 			if !escaped {
 				switch char {
@@ -97,21 +105,29 @@ func Parse(content string) *IniDoc {
 				}
 			} else {
 				escaped = false
-				if char == 'N' {
+				if char == 'N' || char == 'n' {
 					buff = append(buff, '\n')
 					continue
 				}
 			}
 			buff = append(buff, char)
 		case ParseStepSection:
-			if char == ']' && !escaped {
-				currentDoc = doc.Section(strings.Trim(string(buff), " "))
+			switch char {
+			case ']':
+				if !escaped {
+					currentDoc = doc.Section(strings.Trim(string(buff), " "))
+					buff = make([]rune, 0, 16)
+					step = ParseStepLookup
+				} else {
+					buff = append(buff, char)
+				}
+			case '\n':
 				buff = make([]rune, 0, 16)
 				step = ParseStepLookup
-			} else {
-				escaped = false
+			default:
 				buff = append(buff, char)
 			}
+			escaped = false
 		case ParseStepFieldComment:
 			if char == '\n' && !escaped {
 				currentDoc.SetFieldComment(key, strings.Trim(string(buff), " "))

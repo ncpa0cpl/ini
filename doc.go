@@ -380,14 +380,30 @@ func (d *IniSection) SetName(name string) {
 
 // serialization
 
+func escapeIniValue(value string) string {
+	escapedV := make([]rune, 0, len(value)+8)
+
+	for _, char := range value {
+		switch char {
+		case ';', '#':
+			escapedV = append(escapedV, '\\', char)
+		case '\n':
+			escapedV = append(escapedV, '\\', 'N')
+		default:
+			escapedV = append(escapedV, char)
+		}
+	}
+
+	return string(escapedV)
+}
+
 func (f *iniLine) ToString() string {
 	switch f.lineType {
 	case lineTypeKv:
-		v := fmt.Sprintf("%s=%s", f.key, f.value)
+		v := fmt.Sprintf("%s=%s", f.key, escapeIniValue(f.value))
 		if f.comment != "" {
 			v += fmt.Sprintf(" ;%s", f.comment)
 		}
-		v = strings.ReplaceAll(v, "\n", "\\N")
 		return v + "\n"
 	case lineTypeComment:
 		var v string

@@ -2,7 +2,7 @@ package ini
 
 import "strings"
 
-const DISALLOWED_KEY_CHARS = "?{}|&~![()^"
+const DISALLOWED_KEY_CHARS = "?{}|&~![()^\n"
 
 func isKeyValid(key string) bool {
 	if key == "" {

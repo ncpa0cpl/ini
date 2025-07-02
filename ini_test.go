@@ -334,3 +334,22 @@ Line Three`)
 	assert.Equal("Line One\nLine Two \\N|\nLine Three", doc2.Get("multiline"))
 	assert.Equal("bar", doc2.Get("bar"))
 }
+
+func TestDocSetCharEscaping(t *testing.T) {
+	assert := assert.New(t)
+
+	doc := ini.NewDoc()
+
+	doc.Set("key", "value;not a comment # also not a comment = foobar")
+	doc.SetFieldComment("key", "this is a comment")
+
+	docStr := doc.ToString()
+
+	expectedResult := "key=value\\;not a comment \\# also not a comment = foobar ;this is a comment\n"
+
+	assert.Equal(expectedResult, docStr)
+
+	doc2 := ini.Parse(docStr)
+
+	assert.Equal("value;not a comment # also not a comment = foobar", doc2.Get("key"))
+}
