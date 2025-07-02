@@ -14,6 +14,17 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 * **Custom marshaling**: MarshalINI and UnmarshalINI methods, similar to the [custom JSON marshaling](https://pkg.go.dev/encoding/json#example-package-CustomMarshalJSON)
 * **Subsections**: Easily access and add subsections
 
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Document parsing, reading and writing](#document-parsing-reading-and-writing)
+3. [Unmarshal Struct](#unmarshal-struct)
+4. [Marshal Struct](#marshal-struct)
+5. [Sections](#sections)
+6. [Subsections](#subsections)
+7. [Custom Marshal/Unmarshal](#custom-marshalunmarshal)
+8. [Parse File](#parse-file)
+9. [Write File](#write-file)
 
 ## Installation
 
@@ -21,10 +32,7 @@ The INI Parser & Reader Writer Library is a fast and easy-to-use library for par
 go get github.com/ncpa0cpl/ini
 ```
 
-
-## Example
-
-### GetValue
+## Document parsing, reading and writing
 
 ```go
 iniFile := `
@@ -41,18 +49,21 @@ k4=0.0.0.0
 `
 
 doc := ini.Parse(iniFile)
-
 fmt.Println(doc.Get("topLevelValue")) // -> "foo"
 
 section1 := doc.Section("section1")
-
 fmt.Println(section1.Get("k1")) // -> "v1"
 
 k2, err := section1.GetInt("k2")
 fmt.Println(k2) // -> 1
+
+doc.Set("k", "hello")
+section1.SetInt("k2", -2)
+
+iniFile = doc.ToString()
 ```
 
-### Unmarshal Struct
+## Unmarshal Struct
 
 ```go
 type MyStruct struct {
@@ -88,7 +99,7 @@ ini.Unmarshal(doc, &cfg)
 fmt.Println("MyStruct:", cfg) // -> MyStruct: {Lorem Ipsum true 2 val -5 {tom 23}}
 ```
 
-### Marshal Struct
+## Marshal Struct
 
 ```go
 type User struct {
@@ -136,7 +147,7 @@ name=Tom
 age=23
 ```
 
-### Sections
+## Sections
 
 When marshaling/unmarshaling sections can be either nested structs, struct pointers or maps of string keys.
 
@@ -158,7 +169,7 @@ type MyIni struct {
 
 When using maps for sections, it is required that the map key type is `string`. If the key type is different it will be ignored. Also any values in the map that have a non-primitive type will be ignored as well (for example given a map like this: `map[string]any{"foo": 1, "bar": "hello", "baz": time.Now()}` - only `foo` and `bar` will be marshaled into the ini doc, since `time.Now()` is not of a primitive type.)
 
-#### Subsections
+### Subsections
 
 Subsections are a way to nest sections by using dots as path delimiters. For example `foo.bar` is a subsection of a section `foo`.
 
@@ -183,7 +194,7 @@ Subsections can also be accessed by specifying the whole path as the argument fo
 
 When marshaling and un-marshaling nested structs will also create or read subsections. Maps cannot have subsections.
 
-### Custom Marshal/Unmarshal
+## Custom Marshal/Unmarshal
 
 Custom marshaling an un-marshaling can be achieved by implementing these interfaces:
 
@@ -197,7 +208,7 @@ type Unmarshalable interface {
 }
 ```
 
-#### Example
+### Example
 
 ```go
 type MySection struct {
@@ -232,7 +243,7 @@ str, err := ini.Marshal(&myinifile)
 fmt.Println(str) // -> "[MySection]\nValue=bye bye\n"
 ```
 
-### Parse File
+## Parse File
 
 ini file
 
@@ -280,7 +291,7 @@ k2 := doc.Section("s2").Get("k2")
 fmt.Println(k2) // -> 945
 ```
 
-### Write Ini
+## Write File
 
 ```go
 filename := "./save.ini"
