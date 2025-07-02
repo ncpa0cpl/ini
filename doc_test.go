@@ -64,3 +64,86 @@ number=-999
 `
 	expect(stringifiedDoc).ToBe(expectedResult)
 }
+
+func TestSections(t *testing.T) {
+	expect := expect(t)
+
+	docStr := `
+[sect]
+foo=1
+bar=abc
+
+[sect.sub1]
+foo=2
+baz=true
+
+[sect.sub1.nestedSub]
+abc=def
+
+[sect.sub2]
+ghi=jkl`
+
+	doc := ini.Parse(docStr)
+
+	expect(doc.Section("sect").Keys()).ToBe([]string{"foo", "bar"})
+	expect(doc.Section("sect.sub1").Keys()).ToBe([]string{"foo", "baz"})
+	expect(doc.Section("sect.sub1.nestedSub").Keys()).ToBe([]string{"abc"})
+	expect(doc.Section("sect.sub2").Keys()).ToBe([]string{"ghi"})
+	expect(doc.Section("sect").Section("sub1").Keys()).ToBe([]string{"foo", "baz"})
+	expect(doc.Section("sect").Section("sub1").Section("nestedSub").Keys()).ToBe([]string{"abc"})
+	expect(doc.Section("sect").Section("sub1.nestedSub").Keys()).ToBe([]string{"abc"})
+	expect(doc.Section("sect").Section("sub2").Keys()).ToBe([]string{"ghi"})
+
+	expect(doc.Section("sect").Get("foo")).ToBe("1")
+	expect(doc.Section("sect").Get("bar")).ToBe("abc")
+	expect(doc.Section("sect").Section("sub1").Get("foo")).ToBe("2")
+	expect(doc.Section("sect").Section("sub1").Get("baz")).ToBe("true")
+	expect(doc.Section("sect").Section("sub1").Section("nestedSub").Get("abc")).ToBe("def")
+	expect(doc.Section("sect").Section("sub1.nestedSub").Get("abc")).ToBe("def")
+	expect(doc.Section("sect").Section("sub2").Get("ghi")).ToBe("jkl")
+
+	expect(doc.SectionNames()).ToBe([]string{"sect"})
+	expect(doc.SectionNames(true)).ToBe([]string{"sect", "sect.sub1", "sect.sub1.nestedSub", "sect.sub2"})
+
+	expect(doc.Section("sect").SubsectionNames()).ToBe([]string{"sub1", "sub2"})
+	expect(doc.Section("sect").SubsectionNames(true)).ToBe([]string{"sub1", "sub1.nestedSub", "sub2"})
+	expect(doc.Section("sect.sub1").SubsectionNames()).ToBe([]string{"nestedSub"})
+}
+
+func TestSections2(t *testing.T) {
+	expect := expect(t)
+
+	doc := ini.NewDoc()
+
+	sect := doc.Section("sect")
+	sect.SetInt("foo", 1)
+	sect.Set("bar", "abc")
+
+	sectSub1 := sect.Section("sub1")
+	sectSub1.SetInt("foo", 2)
+	sectSub1.SetBool("baz", true)
+
+	nestedSub := sectSub1.Section("nestedSub")
+	nestedSub.Set("abc", "def")
+
+	sub2 := sect.Section("sub2")
+	sub2.Set("ghi", "jkl")
+
+	expectedResult := `
+[sect]
+foo=1
+bar=abc
+
+[sect.sub1]
+foo=2
+baz=true
+
+[sect.sub1.nestedSub]
+abc=def
+
+[sect.sub2]
+ghi=jkl
+`
+
+	expect(doc.ToString()).ToBe(expectedResult)
+}

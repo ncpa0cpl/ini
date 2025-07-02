@@ -26,6 +26,7 @@ type iniLine struct {
 }
 
 type IniSection struct {
+	root    *IniDoc
 	name    string
 	lines   []iniLine
 	comment string
@@ -50,6 +51,26 @@ func NewSection() *IniSection {
 }
 
 func (d *IniDoc) putSection(section *IniSection) {
+	if section.root != nil && section.root != d {
+		// copy over any subsections
+		for idx := range section.root.sections {
+			s := &section.root.sections[idx]
+			if strings.HasPrefix(s.name, section.name+".") {
+				added := false
+				for idx := range d.sections {
+					if d.sections[idx].name == s.name {
+						d.sections[idx] = *s
+						added = true
+						break
+					}
+				}
+				if !added {
+					d.sections = append(d.sections, *s)
+				}
+			}
+		}
+	}
+
 	for idx := range d.sections {
 		if d.sections[idx].name == section.name {
 			d.sections[idx] = *section
@@ -197,6 +218,7 @@ func (d *IniDoc) Section(sectionName string) *IniSection {
 	}
 
 	section := IniSection{
+		root:  d,
 		name:  sectionName,
 		lines: []iniLine{},
 	}
@@ -221,12 +243,33 @@ func (d *IniDoc) Values() []FieldValue {
 	return keys
 }
 
-func (d *IniDoc) SectionNames() []string {
-	names := make([]string, len(d.sections))
-	for idx := range d.sections {
-		names[idx] = d.sections[idx].name
+func (d *IniDoc) SectionNames(includeSubsections ...bool) []string {
+	names := make([]string, 0, len(d.sections))
+	if len(includeSubsections) > 0 && includeSubsections[0] {
+		for idx := range d.sections {
+			names = append(names, d.sections[idx].name)
+		}
+	} else {
+		for idx := range d.sections {
+			if !strings.Contains(d.sections[idx].name, ".") {
+				names = append(names, d.sections[idx].name)
+			}
+		}
 	}
 	return names
+}
+
+func (d *IniSection) putSubSection(section *IniSection) {
+	section.name = fmt.Sprintf("%s.%s", d.name, section.name)
+	if section.root != nil {
+		for idx := range section.root.sections {
+			s := &section.root.sections[idx]
+			if s.name != section.name {
+				s.name = fmt.Sprintf("%s.%s", section.name, s.name)
+			}
+		}
+	}
+	d.root.putSection(section)
 }
 
 func (d *IniSection) getField(key string) *iniLine {
@@ -358,6 +401,14 @@ func (d *IniSection) GetBool(key string) (bool, error) {
 	return strconv.ParseBool(v)
 }
 
+func (d *IniSection) Section(sectionName string) *IniSection {
+	if d.root == nil {
+		d.root = &IniDoc{}
+	}
+
+	return d.root.Section(fmt.Sprintf("%s.%s", d.name, sectionName))
+}
+
 func (d *IniSection) Keys() []string {
 	keys := make([]string, len(d.lines))
 	for idx := range d.lines {
@@ -372,6 +423,29 @@ func (d *IniSection) Values() []FieldValue {
 		keys[idx] = FieldValue{d.lines[idx].key, d.lines[idx].value}
 	}
 	return keys
+}
+
+func (d *IniSection) SubsectionNames(includeSubsections ...bool) []string {
+	allSectionNames := d.root.SectionNames(true)
+
+	result := make([]string, 0, len(allSectionNames))
+	if len(includeSubsections) > 0 && includeSubsections[0] {
+		for _, sectName := range allSectionNames {
+			if strings.HasPrefix(sectName, d.name+".") {
+				result = append(result, sectName[len(d.name)+1:])
+			}
+		}
+	} else {
+		for _, sectName := range allSectionNames {
+			if strings.HasPrefix(sectName, d.name+".") {
+				if !strings.Contains(sectName[len(d.name)+1:], ".") {
+					result = append(result, sectName[len(d.name)+1:])
+				}
+			}
+		}
+	}
+
+	return result
 }
 
 func (d *IniSection) SetName(name string) {

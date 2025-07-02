@@ -26,6 +26,7 @@ type DocOrSection interface {
 	SetUint(key string, value uint64)
 	AddComment(value string)
 	AddHashComment(value string)
+	Section(name string) *IniSection
 	ToString() string
 }
 

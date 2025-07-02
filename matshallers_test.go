@@ -564,3 +564,184 @@ k=somevalue
 
 	expect(docStr).ToBe(expectedResult)
 }
+
+func TestMarshalSubsections(t *testing.T) {
+	expect := expect(t)
+
+	type C struct {
+		Key string
+	}
+
+	type B struct {
+		Key string
+		C   C
+	}
+
+	type A struct {
+		Key string
+		B   B
+	}
+
+	type IniFile struct {
+		A A
+	}
+
+	iniFile := IniFile{
+		A: A{
+			Key: "value a",
+			B: B{
+				Key: "value b",
+				C: C{
+					Key: "value c",
+				},
+			},
+		},
+	}
+
+	docStr, err := ini.Marshal(iniFile)
+	expect(err).NoErr()
+
+	expectedResult := `
+[A]
+Key=value a
+
+[A.B]
+Key=value b
+
+[A.B.C]
+Key=value c
+`
+
+	expect(docStr).ToBe(expectedResult)
+}
+
+func TestMarshalSubsectionsWithMaps(t *testing.T) {
+	expect := expect(t)
+
+	type B struct {
+		Key string
+		C   map[string]string
+	}
+
+	type A struct {
+		Key string
+		B   B
+	}
+
+	type IniFile struct {
+		A A
+	}
+
+	iniFile := IniFile{
+		A: A{
+			Key: "value a",
+			B: B{
+				Key: "value b",
+				C: map[string]string{
+					"mapElem1": "mapVal1",
+					"mapElem2": "mapVal2",
+				},
+			},
+		},
+	}
+
+	docStr, err := ini.Marshal(iniFile)
+	expect(err).NoErr()
+
+	expectedResult := `
+[A]
+Key=value a
+
+[A.B]
+Key=value b
+
+[A.B.C]
+mapElem1=mapVal1
+mapElem2=mapVal2
+`
+
+	expect(docStr).ToBe(expectedResult)
+}
+
+func TestUnmarshalSubsections(t *testing.T) {
+	expect := expect(t)
+
+	type C struct {
+		Key string
+	}
+
+	type B struct {
+		Key string
+		C   C
+	}
+
+	type A struct {
+		Key string
+		B   B
+	}
+
+	type IniFile struct {
+		A A
+	}
+
+	docStr := `
+[A]
+Key=value a
+
+[A.B]
+Key=value b
+
+[A.B.C]
+Key=value c
+`
+
+	iniFile := IniFile{}
+	expect(ini.Unmarshal(docStr, &iniFile)).NoErr()
+
+	expect(iniFile.A.Key).ToBe("value a")
+	expect(iniFile.A.B.Key).ToBe("value b")
+	expect(iniFile.A.B.C.Key).ToBe("value c")
+}
+
+func TestUnmarshalSubsectionsWithMaps(t *testing.T) {
+	expect := expect(t)
+
+	type B struct {
+		Key  string
+		Key2 string
+		C    map[string]string
+	}
+
+	type A struct {
+		Key string
+		B   B
+	}
+
+	type IniFile struct {
+		A A
+	}
+
+	docStr := `
+[A]
+Key=value a
+
+[A.B]
+Key=value b
+
+[A.B.C]
+Key=value c
+anotherKey=1
+
+[A.B]
+Key2=second value b
+`
+
+	iniFile := IniFile{}
+	expect(ini.Unmarshal(docStr, &iniFile)).NoErr()
+
+	expect(iniFile.A.Key).ToBe("value a")
+	expect(iniFile.A.B.Key).ToBe("value b")
+	expect(iniFile.A.B.Key2).ToBe("second value b")
+	expect(iniFile.A.B.C["Key"]).ToBe("value c")
+	expect(iniFile.A.B.C["anotherKey"]).ToBe("1")
+}
