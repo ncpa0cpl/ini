@@ -503,25 +503,24 @@ func escapeIniValue(value string) string {
 }
 
 func (f *iniLine) ToString() string {
+	var v string = ""
 	switch f.lineType {
 	case lineTypeKv:
-		v := fmt.Sprintf("%s=%s", f.key, escapeIniValue(f.value))
+		v = fmt.Sprintf("%s=%s", f.key, escapeIniValue(f.value))
 		if f.comment != "" {
-			v += fmt.Sprintf(" ;%s", f.comment)
+			v += fmt.Sprintf(" ; %s", f.comment)
 		}
 		return v + "\n"
 	case lineTypeComment:
-		var v string
 		lines := strings.Split(f.value, "\n")
 		for _, line := range lines {
-			v = fmt.Sprintf("; %s\n", line)
+			v += fmt.Sprintf("; %s\n", line)
 		}
 		return v
 	case lineTypeHashComment:
-		var v string
 		lines := strings.Split(f.value, "\n")
 		for _, line := range lines {
-			v = fmt.Sprintf("# %s\n", line)
+			v += fmt.Sprintf("# %s\n", line)
 		}
 		return v
 	}
@@ -537,7 +536,10 @@ func (s *IniSection) ToString() string {
 	var v string = ""
 
 	if s.comment != "" {
-		v += fmt.Sprintf("; %s\n", strings.ReplaceAll(s.comment, "\n", "\\n"))
+		lines := strings.Split(s.comment, "\n")
+		for _, line := range lines {
+			v += fmt.Sprintf("; %s\n", line)
+		}
 	}
 
 	v += fmt.Sprintf("[%s]\n", s.name)
@@ -569,8 +571,9 @@ func (d *IniDoc) ToString() string {
 
 func docToSection(doc *IniDoc) *IniSection {
 	sec := IniSection{
-		lines: make([]iniLine, len(doc.lines)),
+		root:  doc,
+		lines: doc.lines,
 	}
-	copy(sec.lines, doc.lines)
+	doc.lines = []iniLine{}
 	return &sec
 }
