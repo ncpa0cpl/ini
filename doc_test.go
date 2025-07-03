@@ -23,7 +23,7 @@ func TestDoc(t *testing.T) {
 
 	expectedResult := `; this is a comment
 str=hello world
-bl=true ;this is a boolean
+bl=true ; this is a boolean
 bl2=false
 ; numbers:
 flt=1.2345

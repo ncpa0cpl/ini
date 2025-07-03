@@ -347,7 +347,7 @@ func TestDocSetCharEscaping(t *testing.T) {
 
 	docStr := doc.ToString()
 
-	expectedResult := "key=value\\;not a comment \\# also not a comment = foobar ;this is a comment\n"
+	expectedResult := "key=value\\;not a comment \\# also not a comment = foobar ; this is a comment\n"
 
 	expect(docStr).ToBe(expectedResult)
 
