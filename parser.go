@@ -1,6 +1,8 @@
 package ini
 
-import "strings"
+import (
+	"strings"
+)
 
 const (
 	parseStepLookup = iota
@@ -26,6 +28,7 @@ type DocOrSection interface {
 	SetUint(key string, value uint64)
 	AddComment(value string)
 	AddHashComment(value string)
+	AddWhiteLine()
 	Section(name string) *IniSection
 	ToString() string
 }
@@ -43,7 +46,7 @@ func Parse(content string) *IniDoc {
 	var currentDoc DocOrSection
 	currentDoc = doc
 
-	for _, char := range content {
+	for idx, char := range content {
 		if char == '\\' && !escaped {
 			escaped = true
 			continue
@@ -64,7 +67,12 @@ func Parse(content string) *IniDoc {
 					step = parseStepComment
 					commentType = '#'
 					continue
-				case ' ', '\n':
+				case '\n':
+					if idx == 0 || content[idx-1] == '\n' {
+						currentDoc.AddWhiteLine()
+					}
+					continue
+				case ' ':
 					continue
 				}
 			} else {

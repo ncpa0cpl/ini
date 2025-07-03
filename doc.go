@@ -11,6 +11,7 @@ const (
 	lineTypeKv = iota
 	lineTypeComment
 	lineTypeHashComment
+	lineTypeWhiteLine
 )
 
 type FieldValue struct {
@@ -39,14 +40,14 @@ type IniDoc struct {
 
 func NewDoc() *IniDoc {
 	return &IniDoc{
-		lines:    []iniLine{},
-		sections: []*IniSection{},
+		lines:    make([]iniLine, 0, 16),
+		sections: make([]*IniSection, 0, 16),
 	}
 }
 
 func NewSection() *IniSection {
 	return &IniSection{
-		lines: []iniLine{},
+		lines: make([]iniLine, 0, 16),
 	}
 }
 
@@ -113,7 +114,26 @@ func (d *IniDoc) addField(key, value string) {
 	})
 }
 
+func (d *IniDoc) lastLine() *iniLine {
+	if len(d.lines) == 0 {
+		return nil
+	}
+	return &d.lines[len(d.lines)-1]
+}
+
+func (d *IniDoc) AddWhiteLine() {
+	d.lines = append(d.lines, iniLine{
+		lineType: lineTypeWhiteLine,
+	})
+}
+
 func (d *IniDoc) AddComment(value string) {
+	lastLine := d.lastLine()
+	if lastLine != nil && lastLine.lineType == lineTypeComment {
+		lastLine.value += "\n" + value
+		return
+	}
+
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeComment,
 		value:    value,
@@ -121,6 +141,12 @@ func (d *IniDoc) AddComment(value string) {
 }
 
 func (d *IniDoc) AddHashComment(value string) {
+	lastLine := d.lastLine()
+	if lastLine != nil && lastLine.lineType == lineTypeHashComment {
+		lastLine.value += "\n" + value
+		return
+	}
+
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeHashComment,
 		value:    value,
@@ -256,17 +282,21 @@ func (d *IniDoc) Section(sectionName string) *IniSection {
 }
 
 func (d *IniDoc) Keys() []string {
-	keys := make([]string, len(d.lines))
+	keys := make([]string, 0, len(d.lines))
 	for idx := range d.lines {
-		keys[idx] = d.lines[idx].key
+		if d.lines[idx].lineType == lineTypeKv {
+			keys = append(keys, d.lines[idx].key)
+		}
 	}
 	return keys
 }
 
 func (d *IniDoc) Values() []FieldValue {
-	keys := make([]FieldValue, len(d.lines))
+	keys := make([]FieldValue, 0, len(d.lines))
 	for idx := range d.lines {
-		keys[idx] = FieldValue{d.lines[idx].key, d.lines[idx].value}
+		if d.lines[idx].lineType == lineTypeKv {
+			keys = append(keys, FieldValue{d.lines[idx].key, d.lines[idx].value})
+		}
 	}
 	return keys
 }
@@ -285,6 +315,20 @@ func (d *IniDoc) SectionNames(includeSubsections ...bool) []string {
 		}
 	}
 	return names
+}
+
+func (d *IniDoc) StripWhiteLines() {
+	newLines := make([]iniLine, 0, len(d.lines))
+	for idx := range d.lines {
+		if d.lines[idx].lineType != lineTypeWhiteLine {
+			newLines = append(newLines, d.lines[idx])
+		}
+	}
+	d.lines = newLines
+
+	for _, section := range d.sections {
+		section.StripWhiteLines()
+	}
 }
 
 func (d *IniSection) putSubSection(section *IniSection) {
@@ -316,7 +360,26 @@ func (d *IniSection) addField(key, value string) {
 	})
 }
 
+func (d *IniSection) lastLine() *iniLine {
+	if len(d.lines) == 0 {
+		return nil
+	}
+	return &d.lines[len(d.lines)-1]
+}
+
+func (d *IniSection) AddWhiteLine() {
+	d.lines = append(d.lines, iniLine{
+		lineType: lineTypeWhiteLine,
+	})
+}
+
 func (d *IniSection) AddComment(value string) {
+	lastLine := d.lastLine()
+	if lastLine != nil && lastLine.lineType == lineTypeComment {
+		lastLine.value += "\n" + value
+		return
+	}
+
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeComment,
 		value:    value,
@@ -324,6 +387,12 @@ func (d *IniSection) AddComment(value string) {
 }
 
 func (d *IniSection) AddHashComment(value string) {
+	lastLine := d.lastLine()
+	if lastLine != nil && lastLine.lineType == lineTypeHashComment {
+		lastLine.value += "\n" + value
+		return
+	}
+
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeHashComment,
 		value:    value,
@@ -441,17 +510,21 @@ func (d *IniSection) Section(sectionName string) *IniSection {
 }
 
 func (d *IniSection) Keys() []string {
-	keys := make([]string, len(d.lines))
+	keys := make([]string, 0, len(d.lines))
 	for idx := range d.lines {
-		keys[idx] = d.lines[idx].key
+		if d.lines[idx].lineType == lineTypeKv {
+			keys = append(keys, d.lines[idx].key)
+		}
 	}
 	return keys
 }
 
 func (d *IniSection) Values() []FieldValue {
-	keys := make([]FieldValue, len(d.lines))
+	keys := make([]FieldValue, 0, len(d.lines))
 	for idx := range d.lines {
-		keys[idx] = FieldValue{d.lines[idx].key, d.lines[idx].value}
+		if d.lines[idx].lineType == lineTypeKv {
+			keys = append(keys, FieldValue{d.lines[idx].key, d.lines[idx].value})
+		}
 	}
 	return keys
 }
@@ -477,6 +550,16 @@ func (d *IniSection) SubsectionNames(includeSubsections ...bool) []string {
 	}
 
 	return result
+}
+
+func (d *IniSection) StripWhiteLines() {
+	newLines := make([]iniLine, 0, len(d.lines))
+	for idx := range d.lines {
+		if d.lines[idx].lineType != lineTypeWhiteLine {
+			newLines = append(newLines, d.lines[idx])
+		}
+	}
+	d.lines = newLines
 }
 
 func (d *IniSection) SetName(name string) {
@@ -523,6 +606,9 @@ func (f *iniLine) ToString() string {
 			v += fmt.Sprintf("# %s\n", line)
 		}
 		return v
+	case lineTypeWhiteLine:
+		v += "\n"
+		return v
 	}
 
 	panic("invalid line type: " + strconv.FormatInt(int64(f.lineType), 10))
@@ -561,7 +647,9 @@ func (d *IniDoc) ToString() string {
 	for _, section := range d.sections {
 		secStr := section.ToString()
 		if secStr != "" {
-			v += "\n"
+			if len(v) >= 2 && v[len(v)-2:] != "\n\n" {
+				v += "\n"
+			}
 			v += secStr
 		}
 	}

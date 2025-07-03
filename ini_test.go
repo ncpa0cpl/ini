@@ -121,7 +121,8 @@ secA=1
 	iniDoc := ini.Parse(docStr)
 
 	iniDoc.Del("a")
-	expect(iniDoc.ToString()).ToBe(`k=v
+	expect(iniDoc.ToString()).ToBe(`
+k=v
 c=d
 
 [section]
@@ -129,16 +130,18 @@ secA=1
 `)
 
 	iniDoc.Section("section").Del("secA")
-	expect(iniDoc.ToString()).ToBe(`k=v
+	expect(iniDoc.ToString()).ToBe(`
+k=v
 c=d
 `)
 
 	iniDoc.Del("c")
-	expect(iniDoc.ToString()).ToBe(`k=v
+	expect(iniDoc.ToString()).ToBe(`
+k=v
 `)
 
 	iniDoc.Del("k")
-	expect(iniDoc.ToString()).ToBe("")
+	expect(iniDoc.ToString()).ToBe("\n")
 }
 
 func TestIniSet(t *testing.T) {
@@ -156,7 +159,8 @@ c=d
 	section.SetInt("a", 11)
 	section.SetFloat("c", 12.3)
 
-	expectedResult := `k=v
+	expectedResult := `
+k=v
 
 [section]
 a=11
@@ -185,6 +189,11 @@ func TestIniSaveAndLoad(t *testing.T) {
 c11=d12312312
 # 434
 
+
+
+
+
+
 [section]
 k=v
 ; dsfads
@@ -203,7 +212,33 @@ k3=v3
 	doc, err := ini.Load("./save.ini")
 	expect(err).NoErr()
 
-	expectedResult := `; 123
+	expectedResult := `
+; 123
+c11=d12312312
+# 434
+
+
+
+
+
+
+[section]
+k=v
+; dsfads
+; 123
+# 3452345
+
+
+[section1]
+k1=v1
+
+[section3]
+k3=v3
+`
+
+	expect(doc.ToString()).ToBe(expectedResult)
+
+	expectedResult2 := `; 123
 c11=d12312312
 # 434
 
@@ -220,7 +255,8 @@ k1=v1
 k3=v3
 `
 
-	expect(doc.ToString()).ToBe(expectedResult)
+	doc.StripWhiteLines()
+	expect(doc.ToString()).ToBe(expectedResult2)
 }
 
 func TestIniFile(t *testing.T) {

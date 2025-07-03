@@ -129,8 +129,7 @@ func TestSections2(t *testing.T) {
 	sub2 := sect.Section("sub2")
 	sub2.Set("ghi", "jkl")
 
-	expectedResult := `
-[sect]
+	expectedResult := `[sect]
 foo=1
 bar=abc
 

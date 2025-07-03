@@ -271,8 +271,7 @@ func TestIniMarshal4(t *testing.T) {
 	doc, err := ini.Marshal(&strct)
 	expect(err).NoErr()
 
-	expectedResult := `
-[SomeSection]
+	expectedResult := `[SomeSection]
 value=1234%
 `
 
@@ -601,8 +600,7 @@ func TestMarshalSubsections(t *testing.T) {
 	docStr, err := ini.Marshal(iniFile)
 	expect(err).NoErr()
 
-	expectedResult := `
-[A]
+	expectedResult := `[A]
 Key=value a
 
 [A.B]
@@ -648,8 +646,7 @@ func TestMarshalSubsectionsWithMaps(t *testing.T) {
 	docStr, err := ini.Marshal(iniFile)
 	expect(err).NoErr()
 
-	expectedResult := `
-[A]
+	expectedResult := `[A]
 Key=value a
 
 [A.B]
@@ -806,8 +803,7 @@ K=reeee
 	docStr2, err := ini.Marshal(ini2)
 	expect(err).NoErr()
 
-	expect(docStr2).ToBe(`
-[FooBar]
+	expect(docStr2).ToBe(`[FooBar]
 TOP=hello
 
 [FooBar.SA]
@@ -838,8 +834,7 @@ K=reeee
 	docStr3, err := ini.Marshal(ini3)
 	expect(err).NoErr()
 
-	expect(docStr3).ToBe(`
-[Wrapper.FooBar]
+	expect(docStr3).ToBe(`[Wrapper.FooBar]
 TOP=hello
 
 [Wrapper.FooBar.SA]
