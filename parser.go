@@ -3,12 +3,12 @@ package ini
 import "strings"
 
 const (
-	ParseStepLookup = iota
-	ParseStepComment
-	ParseStepFieldComment
-	ParseStepSection
-	ParseStepKey
-	ParseStepValue
+	parseStepLookup = iota
+	parseStepComment
+	parseStepFieldComment
+	parseStepSection
+	parseStepKey
+	parseStepValue
 )
 
 type DocOrSection interface {
@@ -33,7 +33,7 @@ type DocOrSection interface {
 func Parse(content string) *IniDoc {
 	var key string
 
-	step := ParseStepLookup
+	step := parseStepLookup
 	escaped := false
 	commentType := ';'
 	buff := make([]rune, 0, 16)
@@ -50,18 +50,18 @@ func Parse(content string) *IniDoc {
 		}
 
 		switch step {
-		case ParseStepLookup:
+		case parseStepLookup:
 			if !escaped {
 				switch char {
 				case '[':
-					step = ParseStepSection
+					step = parseStepSection
 					continue
 				case ';':
-					step = ParseStepComment
+					step = parseStepComment
 					commentType = ';'
 					continue
 				case '#':
-					step = ParseStepComment
+					step = parseStepComment
 					commentType = '#'
 					continue
 				case ' ', '\n':
@@ -70,38 +70,38 @@ func Parse(content string) *IniDoc {
 			} else {
 				escaped = false
 			}
-			step = ParseStepKey
+			step = parseStepKey
 			buff = append(buff, char)
-		case ParseStepKey:
+		case parseStepKey:
 			switch char {
 			case '=':
 				if !escaped {
 					key = strings.Trim(string(buff), " ")
 					buff = make([]rune, 0, 16)
-					step = ParseStepValue
+					step = parseStepValue
 				} else {
 					buff = append(buff, char)
 				}
 			case '\n':
 				buff = make([]rune, 0, 16)
-				step = ParseStepLookup
+				step = parseStepLookup
 			default:
 				buff = append(buff, char)
 			}
 			escaped = false
-		case ParseStepValue:
+		case parseStepValue:
 			if !escaped {
 				switch char {
 				case ';', '#':
 					currentDoc.Set(key, strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
-					step = ParseStepFieldComment
+					step = parseStepFieldComment
 					continue
 				case '\n':
 					currentDoc.Set(key, strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
 					key = ""
-					step = ParseStepLookup
+					step = parseStepLookup
 					continue
 				}
 			} else {
@@ -112,34 +112,34 @@ func Parse(content string) *IniDoc {
 				}
 			}
 			buff = append(buff, char)
-		case ParseStepSection:
+		case parseStepSection:
 			switch char {
 			case ']':
 				if !escaped {
 					currentDoc = doc.Section(strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
-					step = ParseStepLookup
+					step = parseStepLookup
 				} else {
 					buff = append(buff, char)
 				}
 			case '\n':
 				buff = make([]rune, 0, 16)
-				step = ParseStepLookup
+				step = parseStepLookup
 			default:
 				buff = append(buff, char)
 			}
 			escaped = false
-		case ParseStepFieldComment:
+		case parseStepFieldComment:
 			if char == '\n' && !escaped {
 				currentDoc.SetFieldComment(key, strings.Trim(string(buff), " "))
 				buff = make([]rune, 0, 16)
 				key = ""
-				step = ParseStepLookup
+				step = parseStepLookup
 			} else {
 				escaped = false
 				buff = append(buff, char)
 			}
-		case ParseStepComment:
+		case parseStepComment:
 			if char == '\n' && !escaped {
 				if commentType == ';' {
 					currentDoc.AddComment(strings.Trim(string(buff), " "))
@@ -147,7 +147,7 @@ func Parse(content string) *IniDoc {
 					currentDoc.AddHashComment(strings.Trim(string(buff), " "))
 				}
 				buff = make([]rune, 0, 16)
-				step = ParseStepLookup
+				step = parseStepLookup
 			} else {
 				escaped = false
 				buff = append(buff, char)
@@ -156,7 +156,7 @@ func Parse(content string) *IniDoc {
 	}
 
 	if key != "" && len(buff) > 0 {
-		if step == ParseStepFieldComment {
+		if step == parseStepFieldComment {
 			currentDoc.SetFieldComment(key, strings.Trim(string(buff), " "))
 		} else {
 			currentDoc.Set(key, strings.Trim(string(buff), " "))
