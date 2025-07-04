@@ -622,9 +622,39 @@ func (d *IniSection) StripWhiteLines() {
 	d.lines = newLines
 }
 
+// Returns the full section path (e.x. for a section `[Foo.Bar.Baz]` it will return `Foo.Bar.Baz`)
+func (d *IniSection) GetSectionPath() string {
+	return d.name
+}
+
+// Returns the section name without the full path (e.x. for a section `[Foo.Bar.Baz]` it will return `Baz`)
+func (d *IniSection) GetName() string {
+	lastDotIdx := strings.LastIndex(d.name, ".")
+	if lastDotIdx != -1 {
+		if d.name[len(d.name)-1] == '.' {
+			return ""
+		}
+		return d.name[lastDotIdx+1:]
+	}
+	return d.name
+}
+
 // Change the name of this section
-func (d *IniSection) SetName(name string) {
-	d.name = name
+func (d *IniSection) SetName(newName string) {
+	lastDotIdx := strings.LastIndex(d.name, ".")
+	if lastDotIdx != -1 {
+		prefix := d.name[:lastDotIdx+1]
+		newName = prefix + newName
+	}
+
+	// update subsection names
+	for _, section := range d.root.sections {
+		if strings.HasPrefix(section.name, d.name+".") {
+			section.name = newName + section.name[len(d.name):]
+		}
+	}
+
+	d.name = newName
 }
 
 func (d *IniSection) addParsedSection(name string) *IniSection {

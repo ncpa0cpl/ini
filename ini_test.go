@@ -477,3 +477,89 @@ k=v
 k2=v2
 `)
 }
+
+func TestSectionRename(t *testing.T) {
+	expect := expect(t)
+
+	docStr := `[Foo]
+fooK=V
+
+[Foo.Bar]
+fooBarK=V
+
+[Foo.Bar.Baz]
+fooBarBazK=V
+
+[Foo.Bar.Baz.Qux]
+fooBarBazQuxK=V
+
+[Foo1]
+k=v
+
+[A.Foo]
+k=v
+
+[A.Foo.Bar]
+k=v
+`
+
+	doc := ini.Parse(docStr)
+
+	doc.Section("Foo").SetName("Oof")
+
+	expect(doc.Section("Oof").GetName()).ToBe("Oof")
+	expect(doc.Section("Oof.Bar").GetName()).ToBe("Bar")
+	expect(doc.Section("Oof.Bar.Baz").GetName()).ToBe("Baz")
+	expect(doc.Section("Oof.Bar.Baz.Qux").GetName()).ToBe("Qux")
+
+	expect(doc.ToString()).ToBe(`[Oof]
+fooK=V
+
+[Oof.Bar]
+fooBarK=V
+
+[Oof.Bar.Baz]
+fooBarBazK=V
+
+[Oof.Bar.Baz.Qux]
+fooBarBazQuxK=V
+
+[Foo1]
+k=v
+
+[A.Foo]
+k=v
+
+[A.Foo.Bar]
+k=v
+`)
+
+	doc.Section("Oof").Section("Bar").SetName("Rab")
+
+	expect(doc.Section("Oof").GetName()).ToBe("Oof")
+	expect(doc.Section("Oof.Rab").GetName()).ToBe("Rab")
+	expect(doc.Section("Oof.Rab.Baz").GetName()).ToBe("Baz")
+	expect(doc.Section("Oof.Rab.Baz.Qux").GetName()).ToBe("Qux")
+
+	expect(doc.ToString()).ToBe(`[Oof]
+fooK=V
+
+[Oof.Rab]
+fooBarK=V
+
+[Oof.Rab.Baz]
+fooBarBazK=V
+
+[Oof.Rab.Baz.Qux]
+fooBarBazQuxK=V
+
+[Foo1]
+k=v
+
+[A.Foo]
+k=v
+
+[A.Foo.Bar]
+k=v
+`)
+}
