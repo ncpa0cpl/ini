@@ -13,7 +13,7 @@ const (
 	parseStepValue
 )
 
-type DocOrSection interface {
+type docOrSection interface {
 	Del(key string)
 	Get(key string) string
 	GetBool(key string) (bool, error)
@@ -31,6 +31,7 @@ type DocOrSection interface {
 	AddWhiteLine()
 	Section(name string) *IniSection
 	ToString() string
+	addParsedSection(name string) *IniSection
 }
 
 func Parse(content string) *IniDoc {
@@ -43,7 +44,7 @@ func Parse(content string) *IniDoc {
 
 	doc := NewDoc()
 
-	var currentDoc DocOrSection
+	var currentDoc docOrSection
 	currentDoc = doc
 
 	for idx, char := range content {
@@ -124,7 +125,7 @@ func Parse(content string) *IniDoc {
 			switch char {
 			case ']':
 				if !escaped {
-					currentDoc = doc.Section(strings.Trim(string(buff), " "))
+					currentDoc = doc.addParsedSection(strings.Trim(string(buff), " "))
 					buff = make([]rune, 0, 16)
 					step = parseStepLookup
 				} else {

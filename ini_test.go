@@ -391,3 +391,89 @@ func TestDocSetCharEscaping(t *testing.T) {
 
 	expect(doc2.Get("key")).ToBe("value;not a comment # also not a comment = foobar")
 }
+
+func TestSectionComments(t *testing.T) {
+	expect := expect(t)
+
+	docStr := `; hello world
+; this is a section comment
+[FooBar]
+k=v
+
+[FooBaz]
+k2=v2
+
+# this section also has a comment
+# Lorem ipsum dolor sit amet,
+[FooQux]
+k3=v3
+
+; this is a subsection of the FooQux
+[FooQux.A]
+k4=v4
+`
+
+	doc := ini.Parse(docStr)
+
+	expect(doc.SectionNames(true)).ToContain("FooBar", "FooBaz", "FooQux", "FooQux.A")
+	expect(doc.Section("FooBar").GetSectionComment()).ToBe("hello world\nthis is a section comment")
+	expect(doc.Section("FooBaz").GetSectionComment()).ToBe("")
+	expect(doc.Section("FooQux").GetSectionComment()).ToBe("this section also has a comment\nLorem ipsum dolor sit amet,")
+	expect(doc.Section("FooQux.A").GetSectionComment()).ToBe("this is a subsection of the FooQux")
+
+	expect(doc.ToString()).ToBe(`; hello world
+; this is a section comment
+[FooBar]
+k=v
+
+[FooBaz]
+k2=v2
+
+; this section also has a comment
+; Lorem ipsum dolor sit amet,
+[FooQux]
+k3=v3
+
+; this is a subsection of the FooQux
+[FooQux.A]
+k4=v4
+`)
+}
+
+func TestSectionComments2(t *testing.T) {
+	expect := expect(t)
+
+	docStr := `foo=bar
+; this is a standalone comment
+
+; hello world
+; this is a section comment
+[FooBar]
+k=v
+
+; tralalala
+
+[FooBaz]
+k2=v2
+`
+
+	doc := ini.Parse(docStr)
+
+	expect(doc.SectionNames(true)).ToContain("FooBar", "FooBaz")
+	expect(doc.Section("FooBar").GetSectionComment()).ToBe("hello world\nthis is a section comment")
+	expect(doc.Section("FooBaz").GetSectionComment()).ToBe("")
+
+	expect(doc.ToString()).ToBe(`foo=bar
+; this is a standalone comment
+
+; hello world
+; this is a section comment
+[FooBar]
+k=v
+
+; tralalala
+
+[FooBaz]
+k2=v2
+`)
+}

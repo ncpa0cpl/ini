@@ -121,6 +121,30 @@ func (d *IniDoc) lastLine() *iniLine {
 	return &d.lines[len(d.lines)-1]
 }
 
+func (d *IniDoc) addParsedSection(name string) *IniSection {
+	comment := ""
+
+	if len(d.sections) > 0 {
+		lastSection := d.sections[len(d.sections)-1]
+		lastLine := lastSection.lastLine()
+		if lastLine != nil && isCommentLine(lastLine) {
+			lastSection.lines = lastSection.lines[:len(lastSection.lines)-1]
+			comment = lastLine.value
+		}
+	} else {
+		lastLine := d.lastLine()
+		if lastLine != nil && isCommentLine(lastLine) {
+			d.lines = d.lines[:len(d.lines)-1]
+			comment = lastLine.value
+		}
+	}
+
+	s := d.Section(name)
+	s.comment = comment
+
+	return s
+}
+
 func (d *IniDoc) AddWhiteLine() {
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeWhiteLine,
@@ -447,6 +471,14 @@ func (d *IniSection) SetBool(key string, value bool) {
 	d.Set(key, strVal)
 }
 
+func (d *IniSection) GetSectionComment() string {
+	return d.comment
+}
+
+func (d *IniSection) SetSectionComment(comment string) {
+	d.comment = comment
+}
+
 func (d *IniSection) GetComment(key string) string {
 	f := d.getField(key)
 	if f == nil {
@@ -566,6 +598,34 @@ func (d *IniSection) SetName(name string) {
 	d.name = name
 }
 
+func (d *IniSection) addParsedSection(name string) *IniSection {
+	if d.root == nil {
+		d.root = &IniDoc{}
+	}
+
+	if d.name != "" {
+		return d.root.addParsedSection(fmt.Sprintf("%s.%s", d.name, name))
+	}
+
+	return d.root.addParsedSection(name)
+
+	// lastLine := d.root.lastLine()
+	// if d.root == from && lastLine != nil && (lastLine.lineType == lineTypeComment || lastLine.lineType == lineTypeHashComment) {
+	// 	d.root.lines = d.root.lines[:len(d.root.lines)-1]
+	// 	d.comment = lastLine.value
+	// 	return
+	// }
+
+	// lastSection := d.root.lastSection()
+	// if lastSection != nil && lastSection == from {
+	// 	lastLine := lastSection.lastLine()
+	// 	if lastLine != nil && (lastLine.lineType == lineTypeComment || lastLine.lineType == lineTypeHashComment) {
+	// 		lastSection.lines = lastSection.lines[:len(lastSection.lines)-1]
+	// 		d.comment = lastLine.value
+	// 	}
+	// }
+}
+
 // serialization
 
 func escapeIniValue(value string) string {
@@ -664,4 +724,8 @@ func docToSection(doc *IniDoc) *IniSection {
 	}
 	doc.lines = []iniLine{}
 	return &sec
+}
+
+func isCommentLine(l *iniLine) bool {
+	return l.lineType == lineTypeComment || l.lineType == lineTypeHashComment
 }

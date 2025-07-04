@@ -7,6 +7,26 @@ import (
 	"strings"
 )
 
+type DocOrSection interface {
+	Del(key string)
+	Get(key string) string
+	GetBool(key string) (bool, error)
+	GetFloat(key string) (float64, error)
+	GetInt(key string) (int64, error)
+	GetUint(key string) (uint64, error)
+	Set(key string, value string)
+	SetBool(key string, value bool)
+	SetFieldComment(fieldKey string, value string)
+	SetFloat(key string, value float64)
+	SetInt(key string, value int64)
+	SetUint(key string, value uint64)
+	AddComment(value string)
+	AddHashComment(value string)
+	AddWhiteLine()
+	Section(name string) *IniSection
+	ToString() string
+}
+
 type Marshalable interface {
 	MarshalINI() (DocOrSection, error)
 }
