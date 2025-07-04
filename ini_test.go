@@ -501,6 +501,12 @@ k=v
 
 [A.Foo.Bar]
 k=v
+
+[Bar]
+k=v
+
+[Bar.Baz]
+k=v
 `
 
 	doc := ini.Parse(docStr)
@@ -532,6 +538,12 @@ k=v
 
 [A.Foo.Bar]
 k=v
+
+[Bar]
+k=v
+
+[Bar.Baz]
+k=v
 `)
 
 	doc.Section("Oof").Section("Bar").SetName("Rab")
@@ -560,6 +572,12 @@ k=v
 k=v
 
 [A.Foo.Bar]
+k=v
+
+[Bar]
+k=v
+
+[Bar.Baz]
 k=v
 `)
 }
