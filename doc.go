@@ -145,12 +145,14 @@ func (d *IniDoc) addParsedSection(name string) *IniSection {
 	return s
 }
 
+// Adds an empty line
 func (d *IniDoc) AddWhiteLine() {
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeWhiteLine,
 	})
 }
 
+// Adds a comment line
 func (d *IniDoc) AddComment(value string) {
 	lastLine := d.lastLine()
 	if lastLine != nil && lastLine.lineType == lineTypeComment {
@@ -164,6 +166,7 @@ func (d *IniDoc) AddComment(value string) {
 	})
 }
 
+// Adds a comment line, but with a `#` instead of the default `;`
 func (d *IniDoc) AddHashComment(value string) {
 	lastLine := d.lastLine()
 	if lastLine != nil && lastLine.lineType == lineTypeHashComment {
@@ -177,6 +180,7 @@ func (d *IniDoc) AddHashComment(value string) {
 	})
 }
 
+// Remove the key-value pair from the document root
 func (d *IniDoc) Del(key string) {
 	for idx := range d.lines {
 		if d.lines[idx].lineType == lineTypeKv && d.lines[idx].key == key {
@@ -186,6 +190,7 @@ func (d *IniDoc) Del(key string) {
 	}
 }
 
+// Adds a comment after a key-value pair, comment will be on the same line as the property (e.x. `key=value ; comment`)
 func (d *IniDoc) SetFieldComment(fieldKey string, value string) {
 	f := d.getField(fieldKey)
 	if f != nil {
@@ -225,6 +230,7 @@ func (d *IniDoc) SetBool(key string, value bool) {
 	d.Set(key, strVal)
 }
 
+// Returns the current comment that's associated with the given property key
 func (d *IniDoc) GetComment(key string) string {
 	f := d.getField(key)
 	if f == nil {
@@ -275,6 +281,7 @@ func (d *IniDoc) GetBool(key string) (bool, error) {
 	return strconv.ParseBool(v)
 }
 
+// Retrieves the given section, if that section does not exist it will be added
 func (d *IniDoc) Section(sectionName string) *IniSection {
 	for _, dsection := range d.sections {
 		if dsection.name == sectionName {
@@ -305,6 +312,7 @@ func (d *IniDoc) Section(sectionName string) *IniSection {
 	return &section
 }
 
+// Returns a list of all keys of the top level key-value pairs
 func (d *IniDoc) Keys() []string {
 	keys := make([]string, 0, len(d.lines))
 	for idx := range d.lines {
@@ -315,6 +323,7 @@ func (d *IniDoc) Keys() []string {
 	return keys
 }
 
+// Returns a list of all top level key-value pairs
 func (d *IniDoc) Values() []FieldValue {
 	keys := make([]FieldValue, 0, len(d.lines))
 	for idx := range d.lines {
@@ -325,6 +334,8 @@ func (d *IniDoc) Values() []FieldValue {
 	return keys
 }
 
+// Returns a list of all sections within the document. Subsections are not listed, can be passed a `true` value
+// to list those as well.
 func (d *IniDoc) SectionNames(includeSubsections ...bool) []string {
 	names := make([]string, 0, len(d.sections))
 	if len(includeSubsections) > 0 && includeSubsections[0] {
@@ -341,6 +352,7 @@ func (d *IniDoc) SectionNames(includeSubsections ...bool) []string {
 	return names
 }
 
+// Removes all unnecessary empty lines from the deocument.
 func (d *IniDoc) StripWhiteLines() {
 	newLines := make([]iniLine, 0, len(d.lines))
 	for idx := range d.lines {
@@ -391,12 +403,14 @@ func (d *IniSection) lastLine() *iniLine {
 	return &d.lines[len(d.lines)-1]
 }
 
+// Adds an empty line
 func (d *IniSection) AddWhiteLine() {
 	d.lines = append(d.lines, iniLine{
 		lineType: lineTypeWhiteLine,
 	})
 }
 
+// Adds a comment line
 func (d *IniSection) AddComment(value string) {
 	lastLine := d.lastLine()
 	if lastLine != nil && lastLine.lineType == lineTypeComment {
@@ -410,6 +424,7 @@ func (d *IniSection) AddComment(value string) {
 	})
 }
 
+// Adds a comment line, but with a `#` instead of the default `;`
 func (d *IniSection) AddHashComment(value string) {
 	lastLine := d.lastLine()
 	if lastLine != nil && lastLine.lineType == lineTypeHashComment {
@@ -423,6 +438,7 @@ func (d *IniSection) AddHashComment(value string) {
 	})
 }
 
+// Remove the key-value pair from this section
 func (d *IniSection) Del(key string) {
 	for idx := range d.lines {
 		if d.lines[idx].lineType == lineTypeKv && d.lines[idx].key == key {
@@ -432,6 +448,7 @@ func (d *IniSection) Del(key string) {
 	}
 }
 
+// Adds a comment after a key-value pair, comment will be on the same line as the property (e.x. `key=value ; comment`)
 func (d *IniSection) SetFieldComment(fieldKey string, value string) {
 	f := d.getField(fieldKey)
 	if f != nil {
@@ -471,14 +488,19 @@ func (d *IniSection) SetBool(key string, value bool) {
 	d.Set(key, strVal)
 }
 
+// Returns the comment associated with this Section. This is the comment right above the
+// section name.
 func (d *IniSection) GetSectionComment() string {
 	return d.comment
 }
 
+// Replace the comment associated with this Section. This is the comment right above the
+// section name.
 func (d *IniSection) SetSectionComment(comment string) {
 	d.comment = comment
 }
 
+// Returns the current comment that's associated with the given property key
 func (d *IniSection) GetComment(key string) string {
 	f := d.getField(key)
 	if f == nil {
@@ -529,6 +551,7 @@ func (d *IniSection) GetBool(key string) (bool, error) {
 	return strconv.ParseBool(v)
 }
 
+// Retrieves the given sub-section, if that sub-section does not exist it will be added
 func (d *IniSection) Section(sectionName string) *IniSection {
 	if d.root == nil {
 		d.root = &IniDoc{}
@@ -541,6 +564,7 @@ func (d *IniSection) Section(sectionName string) *IniSection {
 	return d.root.Section(sectionName)
 }
 
+// Returns a list of all keys of this section key-value pairs
 func (d *IniSection) Keys() []string {
 	keys := make([]string, 0, len(d.lines))
 	for idx := range d.lines {
@@ -551,6 +575,7 @@ func (d *IniSection) Keys() []string {
 	return keys
 }
 
+// Returns a list of all key-value pairs within this section
 func (d *IniSection) Values() []FieldValue {
 	keys := make([]FieldValue, 0, len(d.lines))
 	for idx := range d.lines {
@@ -561,6 +586,8 @@ func (d *IniSection) Values() []FieldValue {
 	return keys
 }
 
+// Returns a list of all sub-sections. Only direct subsections are listed by default,
+// `true` argument can be passed to list all subsections to any level deep.
 func (d *IniSection) SubsectionNames(includeSubsections ...bool) []string {
 	allSectionNames := d.root.SectionNames(true)
 
@@ -584,6 +611,7 @@ func (d *IniSection) SubsectionNames(includeSubsections ...bool) []string {
 	return result
 }
 
+// Removes all unnecessary empty lines from the deocument.
 func (d *IniSection) StripWhiteLines() {
 	newLines := make([]iniLine, 0, len(d.lines))
 	for idx := range d.lines {
@@ -594,6 +622,7 @@ func (d *IniSection) StripWhiteLines() {
 	d.lines = newLines
 }
 
+// Change the name of this section
 func (d *IniSection) SetName(name string) {
 	d.name = name
 }
